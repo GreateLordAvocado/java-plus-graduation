@@ -63,7 +63,6 @@ public class PublicEventServiceImpl implements PublicEventService {
             text = "";
         }
 
-
         final List<Event> events = eventRepository.findAllPublishedByCriteria(
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable
         ).getContent();
@@ -71,8 +70,6 @@ public class PublicEventServiceImpl implements PublicEventService {
         final List<EventShortDto> result = new ArrayList<>(
                 dtoService.buildShortDtoList(events, rangeStart, rangeEnd, request.getRequestURI())
         );
-
-        statsService.sendHits(events, request);
 
         if (sort == EventSortOption.VIEWS) {
             result.sort((e1, e2) -> Long.compare(e2.getViews(), e1.getViews()));
@@ -86,15 +83,13 @@ public class PublicEventServiceImpl implements PublicEventService {
         final Event event = eventRepository.findByIdAndState(id, EventState.PUBLISHED)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " not found or not published"));
 
-        final EventFullDto dto = dtoService.buildFullDto(
+        statsService.sendHit(request);
+
+        return dtoService.buildFullDto(
                 event,
                 EventDateTimeUtils.defaultStart(),
                 EventDateTimeUtils.defaultEnd(),
                 UrlUtils.removeTrailingNumberSegment(request.getRequestURI())
         );
-
-        statsService.sendHit(request);
-
-        return dto;
     }
 }
