@@ -2,10 +2,14 @@ package ru.practicum.stats.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.MaxAttemptsRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -24,7 +28,6 @@ import java.net.URI;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
 
 import static ru.practicum.stats.common.Constants.DATE_TIME_FORMAT;
 
@@ -62,7 +65,7 @@ public final class StatsClient {
             uris.forEach(uri -> builder.queryParam("uris", uri));
         }
 
-        final URI uri = builder.build(true).toUri();
+        final URI uri = builder.build().encode().toUri();
         final ResponseEntity<ViewStats[]> response = request(HttpMethod.GET, uri, null, ViewStats[].class);
         final ViewStats[] body = response.getBody();
         return body == null ? List.of() : List.of(body);
