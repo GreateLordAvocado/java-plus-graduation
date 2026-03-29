@@ -10,7 +10,6 @@ import ru.practicum.ewm.request.model.RequestStatus;
 import ru.practicum.ewm.request.repository.RequestRepository;
 import ru.practicum.stats.client.StatsClient;
 import ru.practicum.stats.dto.HitCreateDto;
-import ru.practicum.stats.dto.HitDto;
 import ru.practicum.stats.dto.ViewStats;
 
 import java.time.LocalDateTime;
@@ -42,11 +41,8 @@ public class EventStatsService {
             return Collections.emptyMap();
         }
 
-        List<ViewStats> stats;
-        try {
-            stats = statsClient.findStats(start, end, uris, true);
-        } catch (RuntimeException ex) {
-            log.warn("Failed to get stats from stats-service, returning zero views. URIs={}", uris, ex);
+        final List<ViewStats> stats = findStatsSafely(start, end, uris, baseUri);
+        if (stats.isEmpty()) {
             return Collections.emptyMap();
         }
 
@@ -80,20 +76,34 @@ public class EventStatsService {
         for (Event e : events) {
             hit.setUri(request.getRequestURI() + "/" + e.getId());
             hit.setTimestamp(LocalDateTime.now());
-            try {
-                statsClient.hit(hit);
-            } catch (RuntimeException ex) {
-                log.warn("Failed to send hit for eventId={}, uri='{}'", e.getId(), hit.getUri(), ex);
-            }
+            sendHitSafely(hit, "Failed to send hit for eventId=" + e.getId() + ", uri='" + hit.getUri() + "'");
         }
     }
 
     public void sendHit(HttpServletRequest request) {
         final HitCreateDto hit = HitMapper.buildCreateHit(request);
+        sendHitSafely(hit, "Failed to send single hit for uri='" + hit.getUri() + "'");
+    }
+
+    private List<ViewStats> findStatsSafely(
+            LocalDateTime start,
+            LocalDateTime end,
+            Set<String> uris,
+            String baseUri) {
         try {
-            HitDto ignored = statsClient.hit(hit);
+            return statsClient.findStats(start, end, uris, true);
         } catch (RuntimeException ex) {
-            log.warn("Failed to send single hit for uri='{}'", hit.getUri(), ex);
+            log.warn("Failed to get stats from stats-service, returning zero views. URIs={}, baseUri='{}'",
+                    uris, baseUri, ex);
+            return Collections.emptyList();
+        }
+    }
+
+    private void sendHitSafely(HitCreateDto hit, String message) {
+        try {
+            statsClient.hit(hit);
+        } catch (RuntimeException ex) {
+            log.warn(message, ex);
         }
     }
 }
