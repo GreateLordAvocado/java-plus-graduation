@@ -64,8 +64,8 @@ public class AdminController {
     @ResponseStatus(HttpStatus.OK)
     public List<UserDto> findUsers(
             @RequestParam(required = false) Set<Long> ids,
-            @PositiveOrZero @RequestParam(required = false, defaultValue = "0") int from,
-            @Positive @RequestParam(required = false, defaultValue = "10") int size) {
+            @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+            @Positive @RequestParam(defaultValue = "10") int size) {
         return userService.findUsersByIds(ids, from, size);
     }
 
@@ -89,8 +89,8 @@ public class AdminController {
             @RequestParam(required = false) Set<Long> categories,
             @DateTimeFormat(pattern = DATE_TIME_FORMAT) @RequestParam(required = false) LocalDateTime rangeStart,
             @DateTimeFormat(pattern = DATE_TIME_FORMAT) @RequestParam(required = false) LocalDateTime rangeEnd,
-            @PositiveOrZero @RequestParam(required = false, defaultValue = "0") int from,
-            @Positive @RequestParam(required = false, defaultValue = "10") int size,
+            @PositiveOrZero @RequestParam(defaultValue = "0") int from,
+            @Positive @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
         return eventService.findAllByCriteria(users, states, categories, rangeStart, rangeEnd, from, size, request);
     }
