@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.category.dto.NewCategoryDto;
 import ru.practicum.ewm.category.service.AdminCategoryService;
+import ru.practicum.ewm.common.exception.BadRequestException;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.compilation.dto.UpdateCompilationRequest;
@@ -20,6 +21,7 @@ import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.UpdateEventAdminRequest;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.service.AdminEventService;
+import ru.practicum.ewm.event.util.EventDateTimeUtils;
 import ru.practicum.ewm.user.dto.NewUserRequest;
 import ru.practicum.ewm.user.dto.UserDto;
 import ru.practicum.ewm.user.service.AdminUserService;
@@ -92,6 +94,17 @@ public class AdminController {
             @PositiveOrZero @RequestParam(defaultValue = "0") int from,
             @Positive @RequestParam(defaultValue = "10") int size,
             HttpServletRequest request) {
+
+        if (rangeStart == null) {
+            rangeStart = EventDateTimeUtils.defaultStart();
+        }
+        if (rangeEnd == null) {
+            rangeEnd = EventDateTimeUtils.defaultEnd();
+        }
+        if (rangeStart.isAfter(rangeEnd)) {
+            throw new BadRequestException("The rangeStart must be earlier than or equal to the rangeEnd");
+        }
+
         return eventService.findAllByCriteria(users, states, categories, rangeStart, rangeEnd, from, size, request);
     }
 

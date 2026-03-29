@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.category.model.Category;
 import ru.practicum.ewm.category.repository.CategoryRepository;
-import ru.practicum.ewm.common.exception.BadRequestException;
 import ru.practicum.ewm.common.exception.ConflictException;
 import ru.practicum.ewm.common.exception.NotFoundException;
 import ru.practicum.ewm.event.dto.EventFullDto;
@@ -41,16 +40,6 @@ public class AdminEventServiceImpl implements AdminEventService {
             int from,
             int size,
             HttpServletRequest request) {
-
-        if (rangeStart == null) {
-            rangeStart = EventDateTimeUtils.defaultStart();
-        }
-        if (rangeEnd == null) {
-            rangeEnd = EventDateTimeUtils.defaultEnd();
-        }
-        if (rangeStart.isAfter(rangeEnd)) {
-            throw new BadRequestException("The rangeStart must be earlier than or equal to the rangeEnd");
-        }
 
         List<Event> events = eventRepository.findAllByCriteria(
                 users, states, categories, rangeStart, rangeEnd, PageRequest.of(from, size)
