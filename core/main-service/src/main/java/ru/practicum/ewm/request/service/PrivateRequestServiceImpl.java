@@ -5,9 +5,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.common.exception.ConflictException;
 import ru.practicum.ewm.common.exception.NotFoundException;
-import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
-import ru.practicum.ewm.event.repository.EventRepository;
+import ru.practicum.ewm.request.contract.EventRequestInfo;
+import ru.practicum.ewm.request.contract.EventRequestInfoProvider;
+import ru.practicum.ewm.request.contract.UserExistenceProvider;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
@@ -16,7 +17,6 @@ import ru.practicum.ewm.request.mapper.RequestMapper;
 import ru.practicum.ewm.request.model.Request;
 import ru.practicum.ewm.request.model.RequestStatus;
 import ru.practicum.ewm.request.repository.RequestRepository;
-import ru.practicum.ewm.user.repository.UserRepository;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +26,8 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class PrivateRequestServiceImpl implements PrivateRequestService {
     private final RequestRepository requestRepository;
-    private final EventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final EventRequestInfoProvider eventRequestInfoProvider;
+    private final UserExistenceProvider userExistenceProvider;
 
     @Override
     @Transactional
@@ -38,14 +38,13 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
             );
         }
 
-        final Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        final EventRequestInfo event = eventRequestInfoProvider.getEventRequestInfo(eventId);
 
-        if (!userRepository.existsById(userId)) {
+        if (!userExistenceProvider.existsById(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
 
-        if (event.getInitiator().getId() == userId) {
+        if (event.getInitiatorId() == userId) {
             throw new ConflictException("The user cannot submit participation requests for their own event");
         }
         if (event.getState() != EventState.PUBLISHED) {
@@ -79,7 +78,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
 
     @Override
     public List<ParticipationRequestDto> findUserRequests(long userId) {
-        if (!userRepository.existsById(userId)) {
+        if (!userExistenceProvider.existsById(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
         return requestRepository.findAllByRequesterId(userId)
@@ -90,10 +89,9 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
 
     @Override
     public List<ParticipationRequestDto> findEventRequestsByUser(long userId, long eventId) {
-        final Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        final EventRequestInfo event = eventRequestInfoProvider.getEventRequestInfo(eventId);
 
-        if (event.getInitiator().getId() != userId) {
+        if (event.getInitiatorId() != userId) {
             throw new NotFoundException("Event with id=" + eventId + " was not found for user with id=" + userId);
         }
 
@@ -109,10 +107,9 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
             long userId,
             long eventId,
             EventRequestStatusUpdateRequest updatedRequest) {
-        final Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+        final EventRequestInfo event = eventRequestInfoProvider.getEventRequestInfo(eventId);
 
-        if (event.getInitiator().getId() != userId) {
+        if (event.getInitiatorId() != userId) {
             throw new NotFoundException("Event with id=" + eventId + " was not found for user with id=" + userId);
         }
 
