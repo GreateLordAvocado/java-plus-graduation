@@ -4,14 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.common.exception.NotFoundException;
+import ru.practicum.ewm.compilation.contract.CompilationEventProvider;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.ewm.compilation.mapper.CompilationMapper;
 import ru.practicum.ewm.compilation.model.Compilation;
 import ru.practicum.ewm.compilation.repository.CompilationRepository;
-import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.event.repository.EventRepository;
 
 import java.util.List;
 
@@ -20,16 +19,15 @@ import java.util.List;
 @Transactional
 public class AdminCompilationServiceImpl implements AdminCompilationService {
     private final CompilationRepository compilationRepository;
-    private final EventRepository eventRepository;
+    private final CompilationEventProvider compilationEventProvider;
 
     @Override
     public CompilationDto create(NewCompilationDto newCompilation) {
-        final List<Event> events = newCompilation.getEvents() == null || newCompilation.getEvents().isEmpty() ?
-                List.of() :
-                eventRepository.findAllById(newCompilation.getEvents());
-
-        final Compilation saved = compilationRepository.save(CompilationMapper.from(newCompilation, events));
-        return CompilationMapper.toDto(saved);
+        final Compilation saved = compilationRepository.save(CompilationMapper.from(newCompilation));
+        return CompilationMapper.toDto(
+                saved,
+                compilationEventProvider.getShortEventsByIds(saved.getEventIds())
+        );
     }
 
     @Override
@@ -44,13 +42,14 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
             compilation.setPinned(request.getPinned());
         }
         if (request.getEvents() != null) {
-            final List<Event> events = request.getEvents().isEmpty() ?
-                    List.of() :
-                    eventRepository.findAllById(request.getEvents());
-            compilation.setEvents(events);
+            compilation.setEventIds(request.getEvents().isEmpty() ? List.of() : List.copyOf(request.getEvents()));
         }
 
-        return CompilationMapper.toDto(compilationRepository.save(compilation));
+        final Compilation saved = compilationRepository.save(compilation);
+        return CompilationMapper.toDto(
+                saved,
+                compilationEventProvider.getShortEventsByIds(saved.getEventIds())
+        );
     }
 
     @Override

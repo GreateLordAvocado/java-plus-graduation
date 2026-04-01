@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.ewm.event.model.Event;
 
 import java.util.List;
 
@@ -24,11 +23,11 @@ public class Compilation {
 
     private String title;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(
             name = "events_compilations",
-            joinColumns = @JoinColumn(name = "compilation_id"),
-            inverseJoinColumns = @JoinColumn(name = "event_id")
+            joinColumns = @JoinColumn(name = "compilation_id")
     )
-    private List<Event> events;
+    @Column(name = "event_id")
+    private List<Long> eventIds;
 }
