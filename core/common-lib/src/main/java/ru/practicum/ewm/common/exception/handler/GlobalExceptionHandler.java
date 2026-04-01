@@ -14,12 +14,10 @@ import ru.practicum.ewm.common.exception.NotFoundException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static ru.practicum.stats.common.Constants.DATE_TIME_FORMAT;
-
 @ControllerAdvice
 public final class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {

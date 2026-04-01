@@ -47,7 +47,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         if (event.getInitiatorId() == userId) {
             throw new ConflictException("The user cannot submit participation requests for their own event");
         }
-        if (event.getState() != EventState.PUBLISHED) {
+        if (!event.isPublished()) {
             throw new ConflictException("The user cannot submit participation requests for unpublished events");
         }
 

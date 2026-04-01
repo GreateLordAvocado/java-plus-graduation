@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.common.exception.NotFoundException;
 import ru.practicum.ewm.event.model.Event;
+import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.repository.EventRepository;
 import ru.practicum.ewm.request.contract.EventRequestInfo;
 import ru.practicum.ewm.request.contract.EventRequestInfoProvider;
@@ -21,7 +22,7 @@ public class EventRequestInfoProviderImpl implements EventRequestInfoProvider {
         return EventRequestInfo.builder()
                 .eventId(event.getId())
                 .initiatorId(event.getInitiator().getId())
-                .state(event.getState())
+                .published(event.getState() == EventState.PUBLISHED)
                 .participantLimit(event.getParticipantLimit())
                 .requestModeration(event.isRequestModeration())
                 .build();
