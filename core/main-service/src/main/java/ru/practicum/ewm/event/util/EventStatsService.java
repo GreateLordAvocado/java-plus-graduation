@@ -4,10 +4,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import ru.practicum.ewm.event.contract.ConfirmedRequestCounter;
 import ru.practicum.ewm.event.mapper.HitMapper;
 import ru.practicum.ewm.event.model.Event;
-import ru.practicum.ewm.request.model.RequestStatus;
-import ru.practicum.ewm.request.repository.RequestRepository;
 import ru.practicum.stats.client.StatsClient;
 import ru.practicum.stats.dto.HitCreateDto;
 import ru.practicum.stats.dto.ViewStats;
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class EventStatsService {
     private final StatsClient statsClient;
-    private final RequestRepository requestRepository;
+    private final ConfirmedRequestCounter confirmedRequestCounter;
 
     public Map<Long, Long> countEventViews(
             List<Event> events,
@@ -63,7 +62,7 @@ public class EventStatsService {
     }
 
     public long countConfirmedRequests(long eventId) {
-        return requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+        return confirmedRequestCounter.countConfirmedRequests(eventId);
     }
 
     public void sendHits(List<Event> events, HttpServletRequest request) {
