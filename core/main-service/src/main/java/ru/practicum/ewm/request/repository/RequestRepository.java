@@ -1,6 +1,5 @@
 package ru.practicum.ewm.request.repository;
 
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,7 +15,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     long countByEventIdAndStatusNot(long eventId, RequestStatus status);
 
-    @EntityGraph(attributePaths = {"event", "requester"})
     Optional<Request> findByIdAndRequesterId(long id, long requesterId);
 
     boolean existsByEventIdAndRequesterId(long eventId, long requesterId);
@@ -24,16 +22,14 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
     @Modifying
     @Query("UPDATE Request r " +
             "SET r.status = :newStatus " +
-            "WHERE r.status = :oldStatus AND r.event.id = :eventId")
+            "WHERE r.status = :oldStatus AND r.eventId = :eventId")
     void updateStatusesByEventAndCurrentStatus(
             @Param("oldStatus") RequestStatus oldStatus,
             @Param("newStatus") RequestStatus newStatus,
             @Param("eventId") long eventId
     );
 
-    @EntityGraph(attributePaths = {"event", "requester"})
     List<Request> findAllByRequesterId(long requesterId);
 
-    @EntityGraph(attributePaths = {"event", "requester"})
-    List<Request> findAllByEventIdAndEventInitiatorId(long eventId, long initiatorId);
+    List<Request> findAllByEventId(long eventId);
 }
