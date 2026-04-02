@@ -4,8 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewm.category.model.Category;
-import ru.practicum.ewm.category.repository.CategoryRepository;
+import ru.practicum.ewm.category.contract.CategoryExistenceProvider;
 import ru.practicum.ewm.common.exception.BadRequestException;
 import ru.practicum.ewm.common.exception.ConflictException;
 import ru.practicum.ewm.common.exception.NotFoundException;
@@ -30,7 +29,7 @@ import java.util.List;
 public class PrivateEventServiceImpl implements PrivateEventService {
     private final EventRepository eventRepository;
     private final UserExistenceProvider userExistenceProvider;
-    private final CategoryRepository categoryRepository;
+    private final CategoryExistenceProvider categoryExistenceProvider;
     private final EventDtoService dtoService;
 
     @Override
@@ -41,12 +40,13 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         }
 
         final long categoryId = newEvent.getCategory();
-        final Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new NotFoundException("Category with id=" + categoryId + " was not found"));
+        if (!categoryExistenceProvider.existsById(categoryId)) {
+            throw new NotFoundException("Category with id=" + categoryId + " was not found");
+        }
 
         ensureEventDateNotEarlierThanTwoHoursFromNow(newEvent.getEventDate());
 
-        final Event saved = eventRepository.save(EventMapper.from(newEvent, category, userId));
+        final Event saved = eventRepository.save(EventMapper.from(newEvent, categoryId, userId));
 
         return dtoService.buildFullDto(
                 saved,
@@ -84,18 +84,19 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         final Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
 
-        final Long categoryId = updatedEvent.getCategory();
-        Category category = null;
-        if (categoryId != null) {
-            category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new NotFoundException("Category with id=" + categoryId + " was not found"));
+        Long categoryId = null;
+        if (updatedEvent.getCategory() != null) {
+            categoryId = updatedEvent.getCategory();
+            if (!categoryExistenceProvider.existsById(categoryId)) {
+                throw new NotFoundException("Category with id=" + categoryId + " was not found");
+            }
         }
 
         if (event.getState() == EventState.PUBLISHED) {
             throw new ConflictException("Only pending or canceled events can be changed");
         }
 
-        EventMapper.updateEventProperties(updatedEvent, event, category);
+        EventMapper.updateEventProperties(updatedEvent, event, categoryId);
         ensureEventDateNotEarlierThanTwoHoursFromNow(event.getEventDate());
 
         return dtoService.buildFullDto(

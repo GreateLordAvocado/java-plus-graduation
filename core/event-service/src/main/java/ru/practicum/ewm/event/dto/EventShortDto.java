@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.ewm.category.dto.CategoryDto;
+import ru.practicum.ewm.event.api.dto.CategoryShortInfo;
 import ru.practicum.ewm.event.api.dto.UserShortInfo;
 
 import java.time.LocalDateTime;
@@ -18,7 +18,7 @@ public class EventShortDto {
     private long id;
     private String title;
     private String annotation;
-    private CategoryDto category;
+    private CategoryShortInfo category;
     private boolean paid;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")

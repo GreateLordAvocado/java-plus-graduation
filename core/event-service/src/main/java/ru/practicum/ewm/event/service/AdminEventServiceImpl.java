@@ -5,8 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.ewm.category.model.Category;
-import ru.practicum.ewm.category.repository.CategoryRepository;
+import ru.practicum.ewm.category.contract.CategoryExistenceProvider;
 import ru.practicum.ewm.common.exception.ConflictException;
 import ru.practicum.ewm.common.exception.NotFoundException;
 import ru.practicum.ewm.event.api.dto.EventFullDto;
@@ -27,7 +26,7 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class AdminEventServiceImpl implements AdminEventService {
     private final EventRepository eventRepository;
-    private final CategoryRepository categoryRepository;
+    private final CategoryExistenceProvider categoryExistenceProvider;
     private final EventDtoService dtoService;
 
     @Override
@@ -54,12 +53,12 @@ public class AdminEventServiceImpl implements AdminEventService {
         final Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " was not found"));
 
-        final Long categoryId = updatedEvent.getCategory();
-        Category category = null;
-
-        if (categoryId != null) {
-            category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new NotFoundException("Category with id=" + categoryId + " was not found"));
+        Long categoryId = null;
+        if (updatedEvent.getCategory() != null) {
+            categoryId = updatedEvent.getCategory();
+            if (!categoryExistenceProvider.existsById(categoryId)) {
+                throw new NotFoundException("Category with id=" + categoryId + " was not found");
+            }
         }
 
         if (event.getState() == EventState.CANCELED) {
@@ -70,7 +69,7 @@ public class AdminEventServiceImpl implements AdminEventService {
             throw new ConflictException("The event has already been published");
         }
 
-        EventMapper.updateEventProperties(updatedEvent, event, category);
+        EventMapper.updateEventProperties(updatedEvent, event, categoryId);
         ensureStartDateIsAtLeastAnHourAfterPublication(event.getEventDate(), event.getPublishedOn());
 
         return dtoService.buildFullDto(

@@ -2,9 +2,13 @@ package ru.practicum.ewm.event.mapper;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.practicum.ewm.category.mapper.CategoryMapper;
-import ru.practicum.ewm.category.model.Category;
-import ru.practicum.ewm.event.api.dto.*;
+import ru.practicum.ewm.event.api.dto.AdminEventAction;
+import ru.practicum.ewm.event.api.dto.EventFullDto;
+import ru.practicum.ewm.event.api.dto.NewEventDto;
+import ru.practicum.ewm.event.api.dto.UpdateEventAdminRequest;
+import ru.practicum.ewm.event.api.dto.UpdateEventRequest;
+import ru.practicum.ewm.event.api.dto.UpdateEventUserRequest;
+import ru.practicum.ewm.event.api.dto.UserEventAction;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
@@ -14,9 +18,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class EventMapper {
 
-    public static Event from(NewEventDto newEvent, Category category, long initiatorId) {
+    public static Event from(NewEventDto newEvent, long categoryId, long initiatorId) {
         return Event.builder()
-                .category(category)
+                .categoryId(categoryId)
                 .initiatorId(initiatorId)
                 .location(newEvent.getLocation())
                 .state(EventState.PENDING)
@@ -35,7 +39,6 @@ public final class EventMapper {
     public static EventShortDto toShortDto(Event event) {
         return EventShortDto.builder()
                 .annotation(event.getAnnotation())
-                .category(CategoryMapper.toDto(event.getCategory()))
                 .eventDate(event.getEventDate())
                 .id(event.getId())
                 .paid(event.isPaid())
@@ -46,7 +49,6 @@ public final class EventMapper {
     public static EventFullDto toFullDto(Event event) {
         return EventFullDto.builder()
                 .annotation(event.getAnnotation())
-                .category(CategoryMapper.toDto(event.getCategory()))
                 .confirmedRequests(0)
                 .createdOn(event.getCreatedOn())
                 .description(event.getDescription())
@@ -64,8 +66,8 @@ public final class EventMapper {
                 .build();
     }
 
-    public static void updateEventProperties(UpdateEventUserRequest updatedEvent, Event event, Category category) {
-        updateEventFromRequest(updatedEvent, event, category);
+    public static void updateEventProperties(UpdateEventUserRequest updatedEvent, Event event, Long categoryId) {
+        updateEventFromRequest(updatedEvent, event, categoryId);
 
         UserEventAction stateAction = updatedEvent.getStateAction();
         if (stateAction != null) {
@@ -75,8 +77,8 @@ public final class EventMapper {
         }
     }
 
-    public static void updateEventProperties(UpdateEventAdminRequest updatedEvent, Event event, Category category) {
-        updateEventFromRequest(updatedEvent, event, category);
+    public static void updateEventProperties(UpdateEventAdminRequest updatedEvent, Event event, Long categoryId) {
+        updateEventFromRequest(updatedEvent, event, categoryId);
 
         AdminEventAction stateAction = updatedEvent.getStateAction();
         if (stateAction != null) {
@@ -94,12 +96,12 @@ public final class EventMapper {
         }
     }
 
-    private static void updateEventFromRequest(UpdateEventRequest updatedEvent, Event event, Category category) {
+    private static void updateEventFromRequest(UpdateEventRequest updatedEvent, Event event, Long categoryId) {
         if (updatedEvent.getAnnotation() != null) {
             event.setAnnotation(updatedEvent.getAnnotation());
         }
-        if (category != null) {
-            event.setCategory(category);
+        if (categoryId != null) {
+            event.setCategoryId(categoryId);
         }
         if (updatedEvent.getDescription() != null) {
             event.setDescription(updatedEvent.getDescription());

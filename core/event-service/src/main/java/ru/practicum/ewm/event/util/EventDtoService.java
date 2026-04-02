@@ -2,6 +2,7 @@ package ru.practicum.ewm.event.util;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import ru.practicum.ewm.category.contract.CategoryShortInfoProvider;
 import ru.practicum.ewm.event.api.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.mapper.EventMapper;
@@ -20,6 +21,7 @@ public class EventDtoService {
 
     private final EventStatsService statsService;
     private final UserShortInfoProvider userShortInfoProvider;
+    private final CategoryShortInfoProvider categoryShortInfoProvider;
 
     public List<EventShortDto> buildShortDtoList(
             List<Event> events,
@@ -40,6 +42,7 @@ public class EventDtoService {
             long confirmedRequests = statsService.countConfirmedRequests(eventId);
 
             EventShortDto dto = EventMapper.toShortDto(event);
+            dto.setCategory(categoryShortInfoProvider.getShortInfo(event.getCategoryId()));
             dto.setInitiator(userShortInfoProvider.getShortInfo(event.getInitiatorId()));
             dto.setViews(eventViews);
             dto.setConfirmedRequests(confirmedRequests);
@@ -69,6 +72,7 @@ public class EventDtoService {
             long confirmedRequests = statsService.countConfirmedRequests(eventId);
 
             EventFullDto dto = EventMapper.toFullDto(event);
+            dto.setCategory(categoryShortInfoProvider.getShortInfo(event.getCategoryId()));
             dto.setInitiator(userShortInfoProvider.getShortInfo(event.getInitiatorId()));
             dto.setViews(eventViews);
             dto.setConfirmedRequests(confirmedRequests);
@@ -96,6 +100,7 @@ public class EventDtoService {
         final long confirmedRequests = statsService.countConfirmedRequests(eventId);
 
         EventFullDto dto = EventMapper.toFullDto(event);
+        dto.setCategory(categoryShortInfoProvider.getShortInfo(event.getCategoryId()));
         dto.setInitiator(userShortInfoProvider.getShortInfo(event.getInitiatorId()));
         dto.setViews(views);
         dto.setConfirmedRequests(confirmedRequests);

@@ -1,11 +1,18 @@
 package ru.practicum.ewm.event.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.ewm.category.model.Category;
 
 import java.time.LocalDateTime;
 
@@ -20,9 +27,8 @@ public class Event {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private Category category;
+    @Column(name = "category_id", nullable = false)
+    private long categoryId;
 
     @Column(name = "initiator_id", nullable = false)
     private long initiatorId;
@@ -34,26 +40,24 @@ public class Event {
     private EventState state;
 
     private String description;
-
     private String annotation;
-
     private String title;
 
-    @JoinColumn(name = "published_on")
+    @Column(name = "published_on")
     private LocalDateTime publishedOn;
 
-    @JoinColumn(name = "created_on")
+    @Column(name = "created_on")
     private LocalDateTime createdOn;
 
-    @JoinColumn(name = "event_date")
+    @Column(name = "event_date")
     private LocalDateTime eventDate;
 
     private boolean paid;
 
-    @JoinColumn(name = "request_moderation")
+    @Column(name = "request_moderation")
     private boolean requestModeration;
 
-    @JoinColumn(name = "participant_limit")
+    @Column(name = "participant_limit")
     private int participantLimit;
 
     @Column(name = "mods_comment")
