@@ -23,10 +23,6 @@ public class EventShortInfo {
     private boolean paid;
     private long views;
     private long confirmedRequests;
-
-    private long categoryId;
-    private String categoryName;
-
-    private long initiatorId;
-    private String initiatorName;
+    private CategoryShortInfo category;
+    private UserShortInfo initiator;
 }

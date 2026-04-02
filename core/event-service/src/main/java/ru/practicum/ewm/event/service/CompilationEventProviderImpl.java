@@ -3,7 +3,9 @@ package ru.practicum.ewm.event.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.compilation.contract.CompilationEventProvider;
+import ru.practicum.ewm.event.api.dto.CategoryShortInfo;
 import ru.practicum.ewm.event.api.dto.EventShortInfo;
+import ru.practicum.ewm.event.api.dto.UserShortInfo;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.repository.EventRepository;
@@ -36,10 +38,14 @@ public class CompilationEventProviderImpl implements CompilationEventProvider {
                 .paid(dto.isPaid())
                 .views(dto.getViews())
                 .confirmedRequests(dto.getConfirmedRequests())
-                .categoryId(dto.getCategory().getId())
-                .categoryName(dto.getCategory().getName())
-                .initiatorId(dto.getInitiator().getId())
-                .initiatorName(dto.getInitiator().getName())
+                .category(CategoryShortInfo.builder()
+                        .id(dto.getCategory().getId())
+                        .name(dto.getCategory().getName())
+                        .build())
+                .initiator(UserShortInfo.builder()
+                        .id(dto.getInitiator().getId())
+                        .name(dto.getInitiator().getName())
+                        .build())
                 .build();
     }
 }
