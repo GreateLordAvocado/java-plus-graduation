@@ -1,53 +1,29 @@
-package ru.practicum.ewm.catalog.controller;
+package ru.practicum.ewm.compilation.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.category.dto.CategoryDto;
-import ru.practicum.ewm.category.dto.NewCategoryDto;
-import ru.practicum.ewm.category.service.AdminCategoryService;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.compilation.dto.UpdateCompilationRequest;
 import ru.practicum.ewm.compilation.service.AdminCompilationService;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping("/admin/compilations")
 @RequiredArgsConstructor
 @Validated
-public class AdminCatalogController {
-    private final AdminCategoryService categoryService;
+public class AdminCompilationController {
     private final AdminCompilationService compilationService;
 
-    @PostMapping("/categories")
-    @ResponseStatus(HttpStatus.CREATED)
-    public CategoryDto createCategory(@Valid @RequestBody NewCategoryDto category) {
-        return categoryService.create(category);
-    }
-
-    @DeleteMapping("/categories/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteCategory(@PathVariable long id) {
-        categoryService.delete(id);
-    }
-
-    @PatchMapping("/categories/{id}")
-    @ResponseStatus(HttpStatus.OK)
-    public CategoryDto updateCategory(
-            @PathVariable long id,
-            @Valid @RequestBody NewCategoryDto category) {
-        return categoryService.update(id, category);
-    }
-
-    @PostMapping("/compilations")
+    @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public CompilationDto createCompilation(@Valid @RequestBody NewCompilationDto newCompilation) {
         return compilationService.create(newCompilation);
     }
 
-    @PatchMapping("/compilations/{id}")
+    @PatchMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     public CompilationDto updateCompilation(
             @PathVariable long id,
@@ -55,7 +31,7 @@ public class AdminCatalogController {
         return compilationService.update(id, request);
     }
 
-    @DeleteMapping("/compilations/{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompilation(@PathVariable long id) {
         compilationService.delete(id);
