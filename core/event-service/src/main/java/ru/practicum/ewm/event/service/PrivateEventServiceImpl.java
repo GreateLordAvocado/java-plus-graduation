@@ -10,17 +10,16 @@ import ru.practicum.ewm.common.exception.BadRequestException;
 import ru.practicum.ewm.common.exception.ConflictException;
 import ru.practicum.ewm.common.exception.NotFoundException;
 import ru.practicum.ewm.event.api.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.api.dto.NewEventDto;
 import ru.practicum.ewm.event.api.dto.UpdateEventUserRequest;
+import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.repository.EventRepository;
-import ru.practicum.ewm.event.util.EventDtoService;
 import ru.practicum.ewm.event.util.EventDateTimeUtils;
-import ru.practicum.ewm.user.model.User;
-import ru.practicum.ewm.user.repository.UserRepository;
+import ru.practicum.ewm.event.util.EventDtoService;
+import ru.practicum.ewm.user.contract.UserExistenceProvider;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,21 +29,31 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class PrivateEventServiceImpl implements PrivateEventService {
     private final EventRepository eventRepository;
-    private final UserRepository userRepository;
+    private final UserExistenceProvider userExistenceProvider;
     private final CategoryRepository categoryRepository;
     private final EventDtoService dtoService;
 
     @Override
     @Transactional
     public EventFullDto create(long userId, NewEventDto newEvent) {
-        final User initiator = userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User with id=" + userId + " was not found"));
+        if (!userExistenceProvider.existsById(userId)) {
+            throw new NotFoundException("User with id=" + userId + " was not found");
+        }
+
         final long categoryId = newEvent.getCategory();
         final Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new NotFoundException("Category with id=" + categoryId + " was not found"));
+
         ensureEventDateNotEarlierThanTwoHoursFromNow(newEvent.getEventDate());
-        final Event saved = eventRepository.save(EventMapper.from(newEvent, category, initiator));
-        return EventMapper.toFullDto(saved);
+
+        final Event saved = eventRepository.save(EventMapper.from(newEvent, category, userId));
+
+        return dtoService.buildFullDto(
+                saved,
+                EventDateTimeUtils.defaultStart(),
+                EventDateTimeUtils.defaultEnd(),
+                "/events"
+        );
     }
 
     @Override
@@ -74,17 +83,21 @@ public class PrivateEventServiceImpl implements PrivateEventService {
     public EventFullDto update(long userId, long eventId, UpdateEventUserRequest updatedEvent) {
         final Event event = eventRepository.findByIdAndInitiatorId(eventId, userId)
                 .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " was not found"));
+
         final Long categoryId = updatedEvent.getCategory();
         Category category = null;
         if (categoryId != null) {
             category = categoryRepository.findById(categoryId)
                     .orElseThrow(() -> new NotFoundException("Category with id=" + categoryId + " was not found"));
         }
+
         if (event.getState() == EventState.PUBLISHED) {
             throw new ConflictException("Only pending or canceled events can be changed");
         }
+
         EventMapper.updateEventProperties(updatedEvent, event, category);
         ensureEventDateNotEarlierThanTwoHoursFromNow(event.getEventDate());
+
         return dtoService.buildFullDto(
                 eventRepository.save(event),
                 EventDateTimeUtils.defaultStart(),

@@ -6,6 +6,7 @@ import ru.practicum.ewm.event.api.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.Event;
+import ru.practicum.ewm.user.contract.UserShortInfoProvider;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ import java.util.Map;
 public class EventDtoService {
 
     private final EventStatsService statsService;
+    private final UserShortInfoProvider userShortInfoProvider;
 
     public List<EventShortDto> buildShortDtoList(
             List<Event> events,
@@ -38,6 +40,7 @@ public class EventDtoService {
             long confirmedRequests = statsService.countConfirmedRequests(eventId);
 
             EventShortDto dto = EventMapper.toShortDto(event);
+            dto.setInitiator(userShortInfoProvider.getShortInfo(event.getInitiatorId()));
             dto.setViews(eventViews);
             dto.setConfirmedRequests(confirmedRequests);
 
@@ -66,6 +69,7 @@ public class EventDtoService {
             long confirmedRequests = statsService.countConfirmedRequests(eventId);
 
             EventFullDto dto = EventMapper.toFullDto(event);
+            dto.setInitiator(userShortInfoProvider.getShortInfo(event.getInitiatorId()));
             dto.setViews(eventViews);
             dto.setConfirmedRequests(confirmedRequests);
 
@@ -92,6 +96,7 @@ public class EventDtoService {
         final long confirmedRequests = statsService.countConfirmedRequests(eventId);
 
         EventFullDto dto = EventMapper.toFullDto(event);
+        dto.setInitiator(userShortInfoProvider.getShortInfo(event.getInitiatorId()));
         dto.setViews(views);
         dto.setConfirmedRequests(confirmedRequests);
 

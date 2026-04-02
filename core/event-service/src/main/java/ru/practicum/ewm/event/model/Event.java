@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.ewm.category.model.Category;
-import ru.practicum.ewm.user.model.User;
 
 import java.time.LocalDateTime;
 
@@ -25,9 +24,8 @@ public class Event {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "initiator_id")
-    private User initiator;
+    @Column(name = "initiator_id", nullable = false)
+    private long initiatorId;
 
     @Embedded
     private Location location;

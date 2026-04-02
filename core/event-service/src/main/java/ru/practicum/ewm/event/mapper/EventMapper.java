@@ -8,18 +8,16 @@ import ru.practicum.ewm.event.api.dto.*;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
-import ru.practicum.ewm.user.mapper.UserMapper;
-import ru.practicum.ewm.user.model.User;
 
 import java.time.LocalDateTime;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class EventMapper {
 
-    public static Event from(NewEventDto newEvent, Category category, User initiator) {
+    public static Event from(NewEventDto newEvent, Category category, long initiatorId) {
         return Event.builder()
                 .category(category)
-                .initiator(initiator)
+                .initiatorId(initiatorId)
                 .location(newEvent.getLocation())
                 .state(EventState.PENDING)
                 .description(newEvent.getDescription())
@@ -40,7 +38,6 @@ public final class EventMapper {
                 .category(CategoryMapper.toDto(event.getCategory()))
                 .eventDate(event.getEventDate())
                 .id(event.getId())
-                .initiator(UserMapper.toShortDto(event.getInitiator()))
                 .paid(event.isPaid())
                 .title(event.getTitle())
                 .build();
@@ -55,7 +52,6 @@ public final class EventMapper {
                 .description(event.getDescription())
                 .eventDate(event.getEventDate())
                 .id(event.getId())
-                .initiator(UserMapper.toShortDto(event.getInitiator()))
                 .location(event.getLocation())
                 .paid(event.isPaid())
                 .participantLimit(event.getParticipantLimit())

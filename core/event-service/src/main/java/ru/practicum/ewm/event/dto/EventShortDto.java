@@ -6,27 +6,25 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.ewm.category.dto.CategoryDto;
-import ru.practicum.ewm.user.dto.UserShortDto;
+import ru.practicum.ewm.event.api.dto.UserShortInfo;
 
 import java.time.LocalDateTime;
-
-import static ru.practicum.stats.common.Constants.DATE_TIME_FORMAT;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventShortDto {
+    private long id;
+    private String title;
     private String annotation;
     private CategoryDto category;
-    private long confirmedRequests;
+    private boolean paid;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
-    private long id;
-    private UserShortDto initiator;
-    private boolean paid;
-    private String title;
+    private UserShortInfo initiator;
     private long views;
+    private long confirmedRequests;
 }

@@ -8,41 +8,37 @@ import lombok.NoArgsConstructor;
 import ru.practicum.ewm.category.dto.CategoryDto;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.model.Location;
-import ru.practicum.ewm.user.dto.UserShortDto;
 
 import java.time.LocalDateTime;
-
-import static ru.practicum.stats.common.Constants.DATE_TIME_FORMAT;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventFullDto {
+    private long id;
+    private String title;
     private String annotation;
-    private CategoryDto category;
-    private long confirmedRequests;
-
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT)
-    private LocalDateTime createdOn;
-
     private String description;
+    private CategoryDto category;
+    private boolean paid;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
 
-    private long id;
-    private UserShortDto initiator;
+    private UserShortInfo initiator;
     private Location location;
-    private boolean paid;
     private int participantLimit;
     private boolean requestModeration;
+    private EventState state;
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = DATE_TIME_FORMAT)
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime createdOn;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime publishedOn;
 
-    private EventState state;
-    private String title;
     private long views;
+    private long confirmedRequests;
     private String modsComment;
 }
