@@ -10,8 +10,8 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.common.exception.BadRequestException;
 import ru.practicum.ewm.common.exception.NotFoundException;
 import ru.practicum.ewm.event.api.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.api.dto.EventSortOption;
+import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.event.model.EventState;
 import ru.practicum.ewm.event.repository.EventRepository;
@@ -63,9 +63,22 @@ public class PublicEventServiceImpl implements PublicEventService {
             text = "";
         }
 
-        final List<Event> events = eventRepository.findAllPublishedByCriteria(
-                text, categories, paid, rangeStart, rangeEnd, onlyAvailable, pageable
+        final List<Event> foundEvents = eventRepository.findAllPublishedByCriteria(
+                text, categories, paid, rangeStart, rangeEnd, pageable
         ).getContent();
+
+        final List<Event> events;
+        if (onlyAvailable) {
+            events = new ArrayList<>();
+            for (Event event : foundEvents) {
+                long confirmedRequests = statsService.countConfirmedRequests(event.getId());
+                if (event.getParticipantLimit() == 0 || confirmedRequests < event.getParticipantLimit()) {
+                    events.add(event);
+                }
+            }
+        } else {
+            events = foundEvents;
+        }
 
         final List<EventShortDto> result = new ArrayList<>(
                 dtoService.buildShortDtoList(events, rangeStart, rangeEnd, request.getRequestURI())

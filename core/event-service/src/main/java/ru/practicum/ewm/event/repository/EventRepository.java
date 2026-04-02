@@ -30,12 +30,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
               AND (:categories IS NULL OR e.categoryId IN :categories)
               AND (:paid IS NULL OR e.paid = :paid)
               AND e.eventDate BETWEEN :start AND :end
-              AND (:onlyAvl = FALSE OR e.participantLimit = 0 OR e.participantLimit > (
-                    SELECT COUNT(r)
-                    FROM Request r
-                    WHERE r.eventId = e.id
-                      AND r.status = 'CONFIRMED'
-              ))
             """)
     Page<Event> findAllPublishedByCriteria(
             @Param("text") String text,
@@ -43,7 +37,6 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             @Param("paid") Boolean paid,
             @Param("start") LocalDateTime rangeStart,
             @Param("end") LocalDateTime rangeEnd,
-            @Param("onlyAvl") boolean onlyAvailable,
             Pageable pageable
     );
 
