@@ -15,6 +15,22 @@ import org.springframework.context.annotation.FilterType;
                 @ComponentScan.Filter(
                         type = FilterType.REGEX,
                         pattern = "ru\\.practicum\\.ewm\\.user\\.controller\\..*"
+                ),
+                @ComponentScan.Filter(
+                        type = FilterType.REGEX,
+                        pattern = "ru\\.practicum\\.ewm\\.catalog\\.category\\.controller\\..*"
+                ),
+                @ComponentScan.Filter(
+                        type = FilterType.REGEX,
+                        pattern = "ru\\.practicum\\.ewm\\.catalog\\.compilation\\.controller\\..*"
+                ),
+                @ComponentScan.Filter(
+                        type = FilterType.REGEX,
+                        pattern = "ru\\.practicum\\.ewm\\.user\\.UserServiceApplication"
+                ),
+                @ComponentScan.Filter(
+                        type = FilterType.REGEX,
+                        pattern = "ru\\.practicum\\.ewm\\.catalog\\.CatalogServiceApplication"
                 )
         }
 )
