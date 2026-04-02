@@ -7,9 +7,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.ewm.event.dto.EventFullDto;
+import ru.practicum.ewm.event.api.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
-import ru.practicum.ewm.event.dto.EventSortOption;
+import ru.practicum.ewm.event.api.dto.EventSortOption;
 import ru.practicum.ewm.event.service.PublicEventService;
 
 import java.time.LocalDateTime;
