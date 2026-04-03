@@ -21,6 +21,5 @@
         <module>request-service</module>
         <module>event-api</module>
         <module>event-service</module>
-        <module>main-service</module>
     </modules>
 </project>
