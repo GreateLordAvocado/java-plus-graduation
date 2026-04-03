@@ -2,6 +2,7 @@ package ru.practicum.ewm.request.client;
 
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.common.exception.NotFoundException;
 import ru.practicum.ewm.request.contract.EventRequestInfo;
@@ -9,6 +10,7 @@ import ru.practicum.ewm.request.contract.EventRequestInfoProvider;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class EventRequestInfoProviderAdapter implements EventRequestInfoProvider {
 
     private final EventInternalClient eventInternalClient;
@@ -19,6 +21,9 @@ public class EventRequestInfoProviderAdapter implements EventRequestInfoProvider
             return eventInternalClient.getEventRequestInfo(eventId);
         } catch (FeignException.NotFound e) {
             throw new NotFoundException("Event with id=" + eventId + " was not found");
+        } catch (RuntimeException ex) {
+            log.warn("Failed to get event request info for eventId={}, returning 404 instead of 5xx", eventId, ex);
+            throw new NotFoundException("Event with id=" + eventId + " was not found or is temporarily unavailable");
         }
     }
 }
