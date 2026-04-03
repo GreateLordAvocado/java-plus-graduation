@@ -52,6 +52,11 @@ services:
     environment:
       SERVER_PORT: 8888
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost:8888/actuator/health" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
     restart: on-failure
 
   gateway-server:
@@ -61,8 +66,10 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - discovery-server
-      - config-server
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_healthy
     environment:
       SERVER_PORT: 8080
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
