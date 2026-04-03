@@ -1,6 +1,7 @@
 package ru.practicum.ewm.catalog.category.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.category.contract.CategoryExistenceProvider;
 import ru.practicum.ewm.category.contract.CategoryShortInfoProvider;
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Component
+@Primary
 @RequiredArgsConstructor
 public class CategoryQueryProviderImpl implements CategoryExistenceProvider, CategoryShortInfoProvider {
     private final CategoryRepository categoryRepository;
