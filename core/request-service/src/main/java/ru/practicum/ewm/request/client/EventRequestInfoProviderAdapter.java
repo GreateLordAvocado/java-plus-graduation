@@ -1,7 +1,9 @@
 package ru.practicum.ewm.request.client;
 
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import ru.practicum.ewm.common.exception.NotFoundException;
 import ru.practicum.ewm.request.contract.EventRequestInfo;
 import ru.practicum.ewm.request.contract.EventRequestInfoProvider;
 
@@ -13,6 +15,10 @@ public class EventRequestInfoProviderAdapter implements EventRequestInfoProvider
 
     @Override
     public EventRequestInfo getEventRequestInfo(long eventId) {
-        return eventInternalClient.getEventRequestInfo(eventId);
+        try {
+            return eventInternalClient.getEventRequestInfo(eventId);
+        } catch (FeignException.NotFound e) {
+            throw new NotFoundException("Event with id=" + eventId + " was not found");
+        }
     }
 }
