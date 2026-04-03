@@ -65,6 +65,13 @@ public class EventStatsService {
         return confirmedRequestCounter.countConfirmedRequests(eventId);
     }
 
+    public Map<Long, Long> countConfirmedRequests(Collection<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        return confirmedRequestCounter.countConfirmedRequestsByEventIds(eventIds);
+    }
+
     public void sendHits(List<Event> events, HttpServletRequest request) {
         if (events == null || events.isEmpty()) {
             return;

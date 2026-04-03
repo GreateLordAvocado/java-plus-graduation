@@ -3,17 +3,16 @@ package ru.practicum.ewm.event.util;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.category.contract.CategoryShortInfoProvider;
+import ru.practicum.ewm.event.api.dto.CategoryShortInfo;
 import ru.practicum.ewm.event.api.dto.EventFullDto;
+import ru.practicum.ewm.event.api.dto.UserShortInfo;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.mapper.EventMapper;
 import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.user.contract.UserShortInfoProvider;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 @RequiredArgsConstructor
@@ -34,18 +33,21 @@ public class EventDtoService {
         }
 
         final Map<Long, Long> views = statsService.countEventViews(events, start, end, baseUri);
+        final Map<Long, Long> confirmedRequests = statsService.countConfirmedRequests(extractEventIds(events));
+        final Map<Long, CategoryShortInfo> categories =
+                categoryShortInfoProvider.getShortInfoByIds(extractCategoryIds(events));
+        final Map<Long, UserShortInfo> initiators =
+                userShortInfoProvider.getShortInfoByIds(extractInitiatorIds(events));
 
         List<EventShortDto> result = new ArrayList<>(events.size());
         for (Event event : events) {
             long eventId = event.getId();
-            long eventViews = views.getOrDefault(eventId, 0L);
-            long confirmedRequests = statsService.countConfirmedRequests(eventId);
 
             EventShortDto dto = EventMapper.toShortDto(event);
-            dto.setCategory(categoryShortInfoProvider.getShortInfo(event.getCategoryId()));
-            dto.setInitiator(userShortInfoProvider.getShortInfo(event.getInitiatorId()));
-            dto.setViews(eventViews);
-            dto.setConfirmedRequests(confirmedRequests);
+            dto.setCategory(categories.get(event.getCategoryId()));
+            dto.setInitiator(initiators.get(event.getInitiatorId()));
+            dto.setViews(views.getOrDefault(eventId, 0L));
+            dto.setConfirmedRequests(confirmedRequests.getOrDefault(eventId, 0L));
 
             result.add(dto);
         }
@@ -64,18 +66,21 @@ public class EventDtoService {
         }
 
         final Map<Long, Long> views = statsService.countEventViews(events, start, end, baseUri);
+        final Map<Long, Long> confirmedRequests = statsService.countConfirmedRequests(extractEventIds(events));
+        final Map<Long, CategoryShortInfo> categories =
+                categoryShortInfoProvider.getShortInfoByIds(extractCategoryIds(events));
+        final Map<Long, UserShortInfo> initiators =
+                userShortInfoProvider.getShortInfoByIds(extractInitiatorIds(events));
 
         List<EventFullDto> result = new ArrayList<>(events.size());
         for (Event event : events) {
             long eventId = event.getId();
-            long eventViews = views.getOrDefault(eventId, 0L);
-            long confirmedRequests = statsService.countConfirmedRequests(eventId);
 
             EventFullDto dto = EventMapper.toFullDto(event);
-            dto.setCategory(categoryShortInfoProvider.getShortInfo(event.getCategoryId()));
-            dto.setInitiator(userShortInfoProvider.getShortInfo(event.getInitiatorId()));
-            dto.setViews(eventViews);
-            dto.setConfirmedRequests(confirmedRequests);
+            dto.setCategory(categories.get(event.getCategoryId()));
+            dto.setInitiator(initiators.get(event.getInitiatorId()));
+            dto.setViews(views.getOrDefault(eventId, 0L));
+            dto.setConfirmedRequests(confirmedRequests.getOrDefault(eventId, 0L));
 
             result.add(dto);
         }
@@ -106,5 +111,29 @@ public class EventDtoService {
         dto.setConfirmedRequests(confirmedRequests);
 
         return dto;
+    }
+
+    private static Set<Long> extractEventIds(List<Event> events) {
+        Set<Long> ids = new LinkedHashSet<>();
+        for (Event event : events) {
+            ids.add(event.getId());
+        }
+        return ids;
+    }
+
+    private static Set<Long> extractCategoryIds(List<Event> events) {
+        Set<Long> ids = new LinkedHashSet<>();
+        for (Event event : events) {
+            ids.add(event.getCategoryId());
+        }
+        return ids;
+    }
+
+    private static Set<Long> extractInitiatorIds(List<Event> events) {
+        Set<Long> ids = new LinkedHashSet<>();
+        for (Event event : events) {
+            ids.add(event.getInitiatorId());
+        }
+        return ids;
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import ru.practicum.ewm.request.model.Request;
 import ru.practicum.ewm.request.model.RequestStatus;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,6 +28,18 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
             @Param("oldStatus") RequestStatus oldStatus,
             @Param("newStatus") RequestStatus newStatus,
             @Param("eventId") long eventId
+    );
+
+    @Query("""
+            SELECT r.eventId AS eventId, COUNT(r) AS confirmedCount
+            FROM Request r
+            WHERE r.eventId IN :eventIds
+              AND r.status = :status
+            GROUP BY r.eventId
+            """)
+    List<ConfirmedRequestCountProjection> countConfirmedRequestsByEventIds(
+            @Param("eventIds") Collection<Long> eventIds,
+            @Param("status") RequestStatus status
     );
 
     List<Request> findAllByRequesterId(long requesterId);

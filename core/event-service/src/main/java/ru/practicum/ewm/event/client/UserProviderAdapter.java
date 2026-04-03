@@ -6,6 +6,9 @@ import ru.practicum.ewm.event.api.dto.UserShortInfo;
 import ru.practicum.ewm.user.contract.UserExistenceProvider;
 import ru.practicum.ewm.user.contract.UserShortInfoProvider;
 
+import java.util.Collection;
+import java.util.Map;
+
 @Component
 @RequiredArgsConstructor
 public class UserProviderAdapter implements UserExistenceProvider, UserShortInfoProvider {
@@ -19,5 +22,10 @@ public class UserProviderAdapter implements UserExistenceProvider, UserShortInfo
     @Override
     public UserShortInfo getShortInfo(long userId) {
         return userInternalClient.getShortInfo(userId);
+    }
+
+    @Override
+    public Map<Long, UserShortInfo> getShortInfoByIds(Collection<Long> userIds) {
+        return userInternalClient.getShortInfoByIds(userIds);
     }
 }

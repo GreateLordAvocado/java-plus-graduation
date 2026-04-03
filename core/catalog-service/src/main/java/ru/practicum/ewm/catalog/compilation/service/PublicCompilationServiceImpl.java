@@ -11,8 +11,15 @@ import ru.practicum.ewm.catalog.compilation.model.Compilation;
 import ru.practicum.ewm.catalog.compilation.repository.CompilationRepository;
 import ru.practicum.ewm.common.exception.NotFoundException;
 import ru.practicum.ewm.compilation.contract.CompilationEventProvider;
+import ru.practicum.ewm.event.api.dto.EventShortInfo;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -39,11 +46,42 @@ public class PublicCompilationServiceImpl implements PublicCompilationService {
                 ? compilationRepository.findAll(PageRequest.of(page, size))
                 : compilationRepository.findByPinned(pinned, PageRequest.of(page, size));
 
-        return compilationsPage.stream()
+        final List<Compilation> compilations = compilationsPage.getContent();
+
+        final List<Long> allEventIds = compilations.stream()
+                .map(Compilation::getEventIds)
+                .filter(Objects::nonNull)
+                .flatMap(Collection::stream)
+                .distinct()
+                .toList();
+
+        final Map<Long, EventShortInfo> eventsById = compilationEventProvider.getShortEventsByIds(allEventIds).stream()
+                .collect(Collectors.toMap(
+                        EventShortInfo::getId,
+                        Function.identity(),
+                        (left, right) -> left,
+                        LinkedHashMap::new
+                ));
+
+        return compilations.stream()
                 .map(compilation -> CompilationMapper.toDto(
                         compilation,
-                        compilationEventProvider.getShortEventsByIds(compilation.getEventIds())
+                        mapEventsInOrder(compilation.getEventIds(), eventsById)
                 ))
+                .toList();
+    }
+
+    private static List<EventShortInfo> mapEventsInOrder(
+            List<Long> eventIds,
+            Map<Long, EventShortInfo> eventsById
+    ) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return List.of();
+        }
+
+        return eventIds.stream()
+                .map(eventsById::get)
+                .filter(Objects::nonNull)
                 .toList();
     }
 }

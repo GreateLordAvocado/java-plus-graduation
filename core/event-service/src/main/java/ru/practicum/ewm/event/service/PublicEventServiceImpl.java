@@ -23,6 +23,7 @@ import ru.practicum.ewm.event.util.UrlUtils;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -69,10 +70,16 @@ public class PublicEventServiceImpl implements PublicEventService {
 
         final List<Event> events;
         if (onlyAvailable) {
+            final Map<Long, Long> confirmedRequests = statsService.countConfirmedRequests(
+                    foundEvents.stream()
+                            .map(Event::getId)
+                            .toList()
+            );
+
             events = new ArrayList<>();
             for (Event event : foundEvents) {
-                long confirmedRequests = statsService.countConfirmedRequests(event.getId());
-                if (event.getParticipantLimit() == 0 || confirmedRequests < event.getParticipantLimit()) {
+                long confirmedCount = confirmedRequests.getOrDefault(event.getId(), 0L);
+                if (event.getParticipantLimit() == 0 || confirmedCount < event.getParticipantLimit()) {
                     events.add(event);
                 }
             }

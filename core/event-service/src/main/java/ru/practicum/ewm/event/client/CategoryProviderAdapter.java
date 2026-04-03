@@ -6,6 +6,9 @@ import ru.practicum.ewm.category.contract.CategoryExistenceProvider;
 import ru.practicum.ewm.category.contract.CategoryShortInfoProvider;
 import ru.practicum.ewm.event.api.dto.CategoryShortInfo;
 
+import java.util.Collection;
+import java.util.Map;
+
 @Component
 @RequiredArgsConstructor
 public class CategoryProviderAdapter implements CategoryExistenceProvider, CategoryShortInfoProvider {
@@ -19,5 +22,10 @@ public class CategoryProviderAdapter implements CategoryExistenceProvider, Categ
     @Override
     public CategoryShortInfo getShortInfo(long categoryId) {
         return categoryInternalClient.getShortInfo(categoryId);
+    }
+
+    @Override
+    public Map<Long, CategoryShortInfo> getShortInfoByIds(Collection<Long> categoryIds) {
+        return categoryInternalClient.getShortInfoByIds(categoryIds);
     }
 }
