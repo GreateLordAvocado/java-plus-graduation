@@ -2,7 +2,7 @@ package ru.practicum.ewm.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ru.practicum.ewm.request.contract.UserExistenceProvider;
+import ru.practicum.ewm.user.contract.UserExistenceProvider;
 import ru.practicum.ewm.user.repository.UserRepository;
 
 @Component

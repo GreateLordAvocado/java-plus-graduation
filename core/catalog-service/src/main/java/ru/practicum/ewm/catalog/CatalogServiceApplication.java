@@ -4,8 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(scanBasePackages = {
-        "ru.practicum.ewm.category",
-        "ru.practicum.ewm.compilation",
+        "ru.practicum.ewm.catalog",
         "ru.practicum.ewm.common"
 })
 public class CatalogServiceApplication {
