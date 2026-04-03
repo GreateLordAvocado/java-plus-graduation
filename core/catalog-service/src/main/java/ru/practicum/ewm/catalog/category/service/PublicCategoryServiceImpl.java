@@ -20,7 +20,9 @@ public class PublicCategoryServiceImpl implements PublicCategoryService {
 
     @Override
     public List<CategoryDto> findAll(int from, int size) {
-        return categoryRepository.findAll(PageRequest.of(from, size))
+        int page = from / size;
+
+        return categoryRepository.findAll(PageRequest.of(page, size))
                 .stream()
                 .map(CategoryMapper::toDto)
                 .toList();

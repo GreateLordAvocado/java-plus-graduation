@@ -58,8 +58,10 @@ public class PrivateEventServiceImpl implements PrivateEventService {
 
     @Override
     public List<EventShortDto> findUserEvents(long userId, int from, int size) {
+        int page = from / size;
+
         return dtoService.buildShortDtoList(
-                eventRepository.findAllByInitiatorId(userId, PageRequest.of(from, size)).stream().toList(),
+                eventRepository.findAllByInitiatorId(userId, PageRequest.of(page, size)).stream().toList(),
                 EventDateTimeUtils.defaultStart(),
                 EventDateTimeUtils.defaultEnd(),
                 "/events"

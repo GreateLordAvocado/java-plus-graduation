@@ -40,8 +40,10 @@ public class AdminEventServiceImpl implements AdminEventService {
             int size,
             HttpServletRequest request) {
 
+        int page = from / size;
+
         List<Event> events = eventRepository.findAllByCriteria(
-                users, states, categories, rangeStart, rangeEnd, PageRequest.of(from, size)
+                users, states, categories, rangeStart, rangeEnd, PageRequest.of(page, size)
         ).stream().toList();
 
         return dtoService.buildFullDtoList(events, rangeStart, rangeEnd, request.getRequestURI());
