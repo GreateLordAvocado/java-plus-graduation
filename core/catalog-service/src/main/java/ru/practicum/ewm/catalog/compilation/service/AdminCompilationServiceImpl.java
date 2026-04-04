@@ -13,7 +13,6 @@ import ru.practicum.ewm.catalog.compilation.model.Compilation;
 import ru.practicum.ewm.catalog.compilation.repository.CompilationRepository;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
