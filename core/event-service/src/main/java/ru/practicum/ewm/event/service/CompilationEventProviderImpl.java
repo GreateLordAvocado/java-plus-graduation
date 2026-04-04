@@ -1,6 +1,7 @@
 package ru.practicum.ewm.event.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.compilation.contract.CompilationEventProvider;
 import ru.practicum.ewm.event.api.dto.EventShortInfo;
@@ -17,6 +18,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
+@Primary
 @RequiredArgsConstructor
 public class CompilationEventProviderImpl implements CompilationEventProvider {
     private final EventRepository eventRepository;
