@@ -39,8 +39,13 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private EventState state;
 
-    private String description;
+    @Column(nullable = false, length = 2000)
     private String annotation;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String description;
+
+    @Column(nullable = false, length = 120)
     private String title;
 
     @Column(name = "published_on")
@@ -60,6 +65,6 @@ public class Event {
     @Column(name = "participant_limit")
     private int participantLimit;
 
-    @Column(name = "mods_comment")
+    @Column(name = "mods_comment", columnDefinition = "TEXT")
     private String modsComment;
 }
