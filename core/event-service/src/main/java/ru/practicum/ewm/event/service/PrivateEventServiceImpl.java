@@ -10,7 +10,6 @@ import ru.practicum.ewm.common.exception.ConflictException;
 import ru.practicum.ewm.common.exception.NotFoundException;
 import ru.practicum.ewm.event.api.dto.EventFullDto;
 import ru.practicum.ewm.event.api.dto.NewEventDto;
-import ru.practicum.ewm.event.api.dto.StateActionUser;
 import ru.practicum.ewm.event.api.dto.UpdateEventUserRequest;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.mapper.EventMapper;
@@ -96,14 +95,6 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         }
 
         if (event.getState() == EventState.PUBLISHED) {
-            throw new ConflictException("Only pending or canceled events can be changed");
-        }
-
-        StateActionUser stateAction = updatedEvent.getStateAction();
-        if (stateAction == StateActionUser.SEND_TO_REVIEW && event.getState() == EventState.PUBLISHED) {
-            throw new ConflictException("Only pending or canceled events can be changed");
-        }
-        if (stateAction == StateActionUser.CANCEL_REVIEW && event.getState() == EventState.PUBLISHED) {
             throw new ConflictException("Only pending or canceled events can be changed");
         }
 
