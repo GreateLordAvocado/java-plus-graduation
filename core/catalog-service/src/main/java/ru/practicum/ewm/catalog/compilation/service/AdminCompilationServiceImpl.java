@@ -12,6 +12,7 @@ import ru.practicum.ewm.catalog.compilation.mapper.CompilationMapper;
 import ru.practicum.ewm.catalog.compilation.model.Compilation;
 import ru.practicum.ewm.catalog.compilation.repository.CompilationRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -42,7 +43,7 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
             compilation.setPinned(request.getPinned());
         }
         if (request.getEvents() != null) {
-            compilation.setEventIds(request.getEvents().isEmpty() ? List.of() : List.copyOf(request.getEvents()));
+            compilation.setEventIds(new ArrayList<>(request.getEvents()));
         }
 
         final Compilation saved = compilationRepository.save(compilation);
