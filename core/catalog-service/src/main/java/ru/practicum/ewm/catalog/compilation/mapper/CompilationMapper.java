@@ -7,7 +7,6 @@ import ru.practicum.ewm.catalog.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.catalog.compilation.model.Compilation;
 import ru.practicum.ewm.event.api.dto.EventShortInfo;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -16,7 +15,7 @@ public final class CompilationMapper {
         return Compilation.builder()
                 .title(newCompilation.getTitle())
                 .pinned(newCompilation.getPinned() != null ? newCompilation.getPinned() : false)
-                .eventIds(newCompilation.getEvents() != null ? new ArrayList<>(newCompilation.getEvents()) : new ArrayList<>())
+                .eventIds(newCompilation.getEvents() != null ? List.copyOf(newCompilation.getEvents()) : List.of())
                 .build();
     }
 
