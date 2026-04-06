@@ -10,6 +10,7 @@ import ru.practicum.ewm.user.contract.UserShortInfoProvider;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 @Component
 @RequiredArgsConstructor
@@ -19,22 +20,22 @@ public class UserProviderAdapter implements UserExistenceProvider, UserShortInfo
 
     @Override
     public boolean existsById(long userId) {
-        try {
-            return userInternalClient.existsById(userId);
-        } catch (RuntimeException ex) {
-            log.warn("Failed to check user existence for userId={}, returning false", userId, ex);
-            return false;
-        }
+        return safeCall(
+                () -> userInternalClient.existsById(userId),
+                false,
+                "Failed to check user existence for userId={}",
+                userId
+        );
     }
 
     @Override
     public UserShortInfo getShortInfo(long userId) {
-        try {
-            return userInternalClient.getShortInfo(userId);
-        } catch (RuntimeException ex) {
-            log.warn("Failed to get user short info for userId={}, returning fallback", userId, ex);
-            return fallbackUser(userId);
-        }
+        return safeCall(
+                () -> userInternalClient.getShortInfo(userId),
+                fallbackUser(userId),
+                "Failed to get user short info for userId={}",
+                userId
+        );
     }
 
     @Override
@@ -43,12 +44,24 @@ public class UserProviderAdapter implements UserExistenceProvider, UserShortInfo
             return Map.of();
         }
 
+        Map<Long, UserShortInfo> fallback = buildFallbackUsers(userIds);
+
+        Map<Long, UserShortInfo> result = safeCall(
+                () -> userInternalClient.getShortInfoByIds(userIds),
+                fallback,
+                "Failed to get users short info batch for ids={}",
+                userIds
+        );
+
+        return result == null ? fallback : fillMissingUsers(userIds, result);
+    }
+
+    private <T> T safeCall(Supplier<T> supplier, T fallback, String message, Object arg) {
         try {
-            Map<Long, UserShortInfo> result = userInternalClient.getShortInfoByIds(userIds);
-            return result == null ? buildFallbackUsers(userIds) : fillMissingUsers(userIds, result);
+            return supplier.get();
         } catch (RuntimeException ex) {
-            log.warn("Failed to get users short info batch, returning fallback for ids={}", userIds, ex);
-            return buildFallbackUsers(userIds);
+            log.warn(message, arg, ex);
+            return fallback;
         }
     }
 
