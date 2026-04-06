@@ -12,7 +12,13 @@ import ru.practicum.ewm.event.model.Event;
 import ru.practicum.ewm.user.contract.UserShortInfoProvider;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -94,9 +100,7 @@ public class EventDtoService {
             LocalDateTime end,
             String baseUri
     ) {
-        if (event == null) {
-            return null;
-        }
+        Objects.requireNonNull(event, "event must not be null");
 
         final long eventId = event.getId();
         final long views = statsService
