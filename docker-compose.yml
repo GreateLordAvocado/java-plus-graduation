@@ -31,6 +31,46 @@ services:
       timeout: 5s
       retries: 10
 
+  kafka:
+    image: bitnami/kafka:3.7
+    container_name: kafka
+    ports:
+      - "9094:9094"
+    environment:
+      KAFKA_CFG_NODE_ID: 0
+      KAFKA_CFG_PROCESS_ROLES: controller,broker
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CFG_LISTENERS: INTERNAL://:9092,EXTERNAL://:9094,CONTROLLER://:9093
+      KAFKA_CFG_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "false"
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_KRAFT_CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka-init:
+    image: bitnami/kafka:3.7
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: >
+      "
+      kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic stats.user-actions.v1 --replication-factor 1 --partitions 3 &&
+      kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic stats.events-similarity.v1 --replication-factor 1 --partitions 3
+      "
+    restart: "no"
+
   discovery-server:
     build: ./infra/discovery-server
     image: discovery-server
@@ -173,4 +213,57 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
       STATS_SERVER_SERVICE_ID: stats-server
+    restart: on-failure
+
+  collector:
+    build: ./stats/collector
+    image: collector
+    container_name: collector
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    environment:
+      EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    restart: on-failure
+
+  aggregator:
+    build: ./stats/aggregator
+    image: aggregator
+    container_name: aggregator
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    environment:
+      EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    restart: on-failure
+
+  analyzer:
+    build: ./stats/analyzer
+    image: analyzer
+    container_name: analyzer
+    depends_on:
+      ewm-db:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    environment:
+      EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 824322
     restart: on-failure
