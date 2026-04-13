@@ -6,7 +6,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication(scanBasePackages = {
         "ru.practicum.ewm.request",
-        "ru.practicum.ewm.common"
+        "ru.practicum.ewm.common",
+        "ru.practicum.stats"
 })
 @EnableFeignClients(basePackages = "ru.practicum.ewm.request.client")
 public class RequestServiceApplication {
