@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.common.exception.ConflictException;
 import ru.practicum.ewm.common.exception.NotFoundException;
+import ru.practicum.ewm.request.client.CollectorGrpcClient;
 import ru.practicum.ewm.request.contract.EventRequestInfo;
 import ru.practicum.ewm.request.contract.EventRequestInfoProvider;
 import ru.practicum.ewm.request.contract.UserExistenceProvider;
@@ -27,6 +28,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
     private final RequestRepository requestRepository;
     private final EventRequestInfoProvider eventRequestInfoProvider;
     private final UserExistenceProvider userExistenceProvider;
+    private final CollectorGrpcClient collectorGrpcClient;
 
     @Override
     @Transactional
@@ -62,7 +64,10 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
             request.setStatus(RequestStatus.CONFIRMED);
         }
 
-        return RequestMapper.toParticipationRequestDto(requestRepository.save(request));
+        final Request saved = requestRepository.save(request);
+        collectorGrpcClient.sendRegisterAction(userId, eventId);
+
+        return RequestMapper.toParticipationRequestDto(saved);
     }
 
     @Override
