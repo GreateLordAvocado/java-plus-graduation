@@ -18,7 +18,10 @@ public class UserActionMapper {
                 .setUserId(proto.getUserId())
                 .setEventId(proto.getEventId())
                 .setActionType(mapActionType(proto.getActionType()))
-                .setTimestamp(Instant.ofEpochMilli(0L))
+                .setTimestamp(Instant.ofEpochSecond(
+                        proto.getTimestamp().getSeconds(),
+                        proto.getTimestamp().getNanos()
+                ))
                 .build();
     }
 
