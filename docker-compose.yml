@@ -112,6 +112,9 @@ services:
     environment:
       SERVER_PORT: 8080
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   user-service:
@@ -124,13 +127,16 @@ services:
       discovery-server:
         condition: service_started
       config-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       SERVER_PORT: 8081
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   catalog-service:
@@ -143,13 +149,16 @@ services:
       discovery-server:
         condition: service_started
       config-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       SERVER_PORT: 8082
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   request-service:
@@ -162,13 +171,16 @@ services:
       discovery-server:
         condition: service_started
       config-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       SERVER_PORT: 8083
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   stats-server:
@@ -183,13 +195,16 @@ services:
       discovery-server:
         condition: service_started
       config-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       SERVER_PORT: 9090
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   event-service:
@@ -202,7 +217,7 @@ services:
       discovery-server:
         condition: service_started
       config-server:
-        condition: service_started
+        condition: service_healthy
       stats-server:
         condition: service_started
     environment:
@@ -212,6 +227,9 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
       STATS_SERVER_SERVICE_ID: stats-server
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   collector:
@@ -228,6 +246,9 @@ services:
     environment:
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   aggregator:
@@ -244,6 +265,9 @@ services:
     environment:
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
       KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   analyzer:
@@ -265,4 +289,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
