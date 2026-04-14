@@ -1,16 +1,18 @@
 package ru.practicum.ewm.collector.kafka;
 
+import org.apache.avro.io.BinaryEncoder;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.specific.SpecificDatumWriter;
 import org.apache.kafka.common.serialization.Serializer;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
-import java.nio.ByteBuffer;
+import java.io.ByteArrayOutputStream;
 import java.util.Map;
 
 public class UserActionAvroSerializer implements Serializer<UserActionAvro> {
 
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
-
     }
 
     @Override
@@ -19,11 +21,13 @@ public class UserActionAvroSerializer implements Serializer<UserActionAvro> {
             return null;
         }
 
-        try {
-            ByteBuffer buffer = data.toByteBuffer();
-            byte[] result = new byte[buffer.remaining()];
-            buffer.get(result);
-            return result;
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            SpecificDatumWriter<UserActionAvro> writer =
+                    new SpecificDatumWriter<>(UserActionAvro.getClassSchema());
+            BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(out, null);
+            writer.write(data, encoder);
+            encoder.flush();
+            return out.toByteArray();
         } catch (Exception e) {
             throw new IllegalStateException("Не удалось сериализовать UserActionAvro", e);
         }
@@ -31,6 +35,5 @@ public class UserActionAvroSerializer implements Serializer<UserActionAvro> {
 
     @Override
     public void close() {
-
     }
 }

@@ -1,5 +1,8 @@
 package ru.practicum.ewm.analyzer.kafka;
 
+import org.apache.avro.io.BinaryDecoder;
+import org.apache.avro.io.DecoderFactory;
+import org.apache.avro.specific.SpecificDatumReader;
 import org.apache.kafka.common.serialization.Deserializer;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 
@@ -10,7 +13,6 @@ public class EventSimilarityAvroDeserializer implements Deserializer<EventSimila
 
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
-
     }
 
     @Override
@@ -20,14 +22,24 @@ public class EventSimilarityAvroDeserializer implements Deserializer<EventSimila
         }
 
         try {
-            return EventSimilarityAvro.fromByteBuffer(ByteBuffer.wrap(data));
-        } catch (Exception e) {
-            throw new IllegalStateException("Не удалось десериализовать EventSimilarityAvro", e);
+            SpecificDatumReader<EventSimilarityAvro> reader =
+                    new SpecificDatumReader<>(EventSimilarityAvro.getClassSchema());
+            BinaryDecoder decoder = DecoderFactory.get().binaryDecoder(data, null);
+            return reader.read(null, decoder);
+        } catch (Exception binaryException) {
+            try {
+                return EventSimilarityAvro.fromByteBuffer(ByteBuffer.wrap(data));
+            } catch (Exception singleObjectException) {
+                IllegalStateException ex =
+                        new IllegalStateException("Не удалось десериализовать EventSimilarityAvro");
+                ex.addSuppressed(binaryException);
+                ex.addSuppressed(singleObjectException);
+                throw ex;
+            }
         }
     }
 
     @Override
     public void close() {
-
     }
 }
