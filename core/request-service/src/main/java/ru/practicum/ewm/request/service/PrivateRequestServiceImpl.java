@@ -48,13 +48,16 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         if (event.getInitiatorId() == userId) {
             throw new ConflictException("The user cannot submit participation requests for their own event");
         }
+
         if (!event.isPublished()) {
             throw new ConflictException("The user cannot submit participation requests for unpublished events");
         }
 
-        if (!event.isRequestModeration()) {
-            final long participants = requestRepository.countByEventIdAndStatusNot(eventId, RequestStatus.REJECTED);
-            if (event.getParticipantLimit() == participants) {
+        if (event.getParticipantLimit() > 0) {
+            final long confirmedParticipants =
+                    requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
+
+            if (confirmedParticipants >= event.getParticipantLimit()) {
                 throw new ConflictException("The max number of participants for this event has been reached");
             }
         }
@@ -85,6 +88,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         if (!userExistenceProvider.existsById(userId)) {
             throw new NotFoundException("User with id=" + userId + " was not found");
         }
+
         return requestRepository.findAllByRequesterId(userId)
                 .stream()
                 .map(RequestMapper::toParticipationRequestDto)
@@ -110,7 +114,8 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
     public EventRequestStatusUpdateResult updateRequestStatus(
             long userId,
             long eventId,
-            EventRequestStatusUpdateRequest updatedRequest) {
+            EventRequestStatusUpdateRequest updatedRequest
+    ) {
         final EventRequestInfo event = eventRequestInfoProvider.getEventRequestInfo(eventId);
 
         if (event.getInitiatorId() != userId) {
@@ -118,7 +123,7 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
         }
 
         long participants = requestRepository.countByEventIdAndStatus(eventId, RequestStatus.CONFIRMED);
-        if (event.getParticipantLimit() != 0 && participants == event.getParticipantLimit()) {
+        if (event.getParticipantLimit() > 0 && participants >= event.getParticipantLimit()) {
             throw new ConflictException("The max number of participants for this event has been reached");
         }
 
@@ -135,23 +140,25 @@ public class PrivateRequestServiceImpl implements PrivateRequestService {
                 throw new ConflictException("It is not possible to change the request status");
             }
 
-            request.setStatus(
-                    updatedRequest.getStatus() == ParticipationRequestStatus.REJECTED
-                            ? RequestStatus.REJECTED
-                            : RequestStatus.CONFIRMED
-            );
+            if (updatedRequest.getStatus() == ParticipationRequestStatus.REJECTED) {
+                request.setStatus(RequestStatus.REJECTED);
+            } else {
+                if (event.getParticipantLimit() > 0 && participants >= event.getParticipantLimit()) {
+                    requestRepository.updateStatusesByEventAndCurrentStatus(
+                            RequestStatus.PENDING,
+                            RequestStatus.REJECTED,
+                            eventId
+                    );
+                    break;
+                }
 
-            if (participants++ == event.getParticipantLimit()) {
-                requestRepository.updateStatusesByEventAndCurrentStatus(
-                        RequestStatus.PENDING,
-                        RequestStatus.REJECTED,
-                        eventId
-                );
-                break;
+                request.setStatus(RequestStatus.CONFIRMED);
+                participants++;
             }
 
             final Request saved = requestRepository.save(request);
             final ParticipationRequestDto dto = RequestMapper.toParticipationRequestDto(saved);
+
             if (saved.getStatus() == RequestStatus.CONFIRMED) {
                 result.getConfirmedRequests().add(dto);
             } else {
