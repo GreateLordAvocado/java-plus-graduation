@@ -1,21 +1,16 @@
 package ru.practicum.ewm.collector.kafka;
 
-import org.apache.avro.io.BinaryEncoder;
-import org.apache.avro.io.EncoderFactory;
-import org.apache.avro.specific.SpecificDatumWriter;
-import org.apache.avro.specific.SpecificData;
 import org.apache.kafka.common.serialization.Serializer;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Map;
 
 public class UserActionAvroSerializer implements Serializer<UserActionAvro> {
 
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
-        // no-op
+
     }
 
     @Override
@@ -24,19 +19,18 @@ public class UserActionAvroSerializer implements Serializer<UserActionAvro> {
             return null;
         }
 
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            SpecificDatumWriter<UserActionAvro> writer =
-                    new SpecificDatumWriter<>(UserActionAvro.getClassSchema(), SpecificData.getForClass(UserActionAvro.class));
-            BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
-            writer.write(data, encoder);
-            encoder.flush();
-            return outputStream.toByteArray();
-        } catch (IOException e) {
+        try {
+            ByteBuffer buffer = data.toByteBuffer();
+            byte[] result = new byte[buffer.remaining()];
+            buffer.get(result);
+            return result;
+        } catch (Exception e) {
             throw new IllegalStateException("Не удалось сериализовать UserActionAvro", e);
         }
     }
 
     @Override
     public void close() {
+
     }
 }
