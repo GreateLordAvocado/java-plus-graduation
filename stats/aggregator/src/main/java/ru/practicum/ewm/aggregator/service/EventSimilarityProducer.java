@@ -3,10 +3,15 @@ package ru.practicum.ewm.aggregator.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.aggregator.config.AggregatorKafkaProperties;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -17,21 +22,29 @@ public class EventSimilarityProducer {
     private final KafkaTemplate<Long, EventSimilarityAvro> kafkaTemplate;
     private final AggregatorKafkaProperties kafkaProperties;
 
-    public void send(EventSimilarityAvro similarity) {
+    public void sendAll(Collection<EventSimilarityAvro> similarities) {
+        if (similarities == null || similarities.isEmpty()) {
+            return;
+        }
+
         try {
-            Long key = similarity.getEventA();
+            List<CompletableFuture<SendResult<Long, EventSimilarityAvro>>> futures =
+                    new ArrayList<>(similarities.size());
 
-            kafkaTemplate.send(kafkaProperties.getEventsSimilarity(), key, similarity)
-                    .get(10, TimeUnit.SECONDS);
+            for (EventSimilarityAvro similarity : similarities) {
+                Long key = similarity.getEventA();
+                futures.add(kafkaTemplate.send(kafkaProperties.getEventsSimilarity(), key, similarity));
+            }
 
-            log.info(
-                    "Отправлено сходство событий в Kafka: eventA={}, eventB={}, score={}",
-                    similarity.getEventA(),
-                    similarity.getEventB(),
-                    similarity.getScore()
-            );
+            kafkaTemplate.flush();
+
+            for (CompletableFuture<SendResult<Long, EventSimilarityAvro>> future : futures) {
+                future.get(10, TimeUnit.SECONDS);
+            }
+
+            log.info("Отправлена пачка сходств событий в Kafka: count={}", similarities.size());
         } catch (Exception e) {
-            throw new IllegalStateException("Не удалось отправить сходство событий в Kafka", e);
+            throw new IllegalStateException("Не удалось отправить сходства событий в Kafka", e);
         }
     }
 }

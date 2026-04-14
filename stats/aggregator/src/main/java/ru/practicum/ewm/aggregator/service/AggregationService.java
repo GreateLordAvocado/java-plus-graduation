@@ -7,7 +7,9 @@ import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -18,20 +20,10 @@ public class AggregationService {
     private final ActionWeightResolver actionWeightResolver;
     private final EventSimilarityProducer eventSimilarityProducer;
 
-    /**
-     * eventId -> (userId -> maxWeight)
-     */
     private final Map<Long, Map<Long, Double>> eventUserWeights = new HashMap<>();
 
-    /**
-     * eventId -> sum of max user weights for this event
-     */
     private final Map<Long, Double> eventWeightSums = new HashMap<>();
 
-    /**
-     * ordered event pair -> Smin
-     * firstEventId -> (secondEventId -> sum min(weightA, weightB))
-     */
     private final Map<Long, Map<Long, Double>> minWeightSums = new HashMap<>();
 
     public synchronized void process(UserActionAvro action) {
@@ -63,6 +55,8 @@ public class AggregationService {
         double updatedEventSum = eventWeightSums.getOrDefault(eventId, 0.0) + deltaWeight;
         eventWeightSums.put(eventId, updatedEventSum);
 
+        List<EventSimilarityAvro> similaritiesToSend = new ArrayList<>();
+
         for (Map.Entry<Long, Map<Long, Double>> entry : eventUserWeights.entrySet()) {
             long otherEventId = entry.getKey();
             if (otherEventId == eventId) {
@@ -82,15 +76,15 @@ public class AggregationService {
             double otherEventSum = eventWeightSums.getOrDefault(otherEventId, 0.0);
             double similarityScore = calculateSimilarity(updatedMinSum, updatedEventSum, otherEventSum);
 
-            EventSimilarityAvro similarity = buildSimilarityMessage(
+            similaritiesToSend.add(buildSimilarityMessage(
                     eventId,
                     otherEventId,
                     similarityScore,
                     action.getTimestamp()
-            );
-
-            eventSimilarityProducer.send(similarity);
+            ));
         }
+
+        eventSimilarityProducer.sendAll(similaritiesToSend);
     }
 
     private double calculateSimilarity(double minSum, double eventSumA, double eventSumB) {
