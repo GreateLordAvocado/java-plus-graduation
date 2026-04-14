@@ -31,6 +31,15 @@ public class UserActionProducer {
                     action.getActionType()
             );
         } catch (Exception e) {
+            log.error(
+                    "Ошибка отправки действия пользователя в Kafka: topic={}, key={}, userId={}, eventId={}, actionType={}",
+                    collectorKafkaProperties.getUserActions(),
+                    action.getEventId(),
+                    action.getUserId(),
+                    action.getEventId(),
+                    action.getActionType(),
+                    e
+            );
             throw new IllegalStateException("Не удалось отправить действие пользователя в Kafka", e);
         }
     }

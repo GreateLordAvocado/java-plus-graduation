@@ -29,7 +29,14 @@ public class UserActionControllerGrpcService extends UserActionControllerGrpc.Us
             responseObserver.onNext(Empty.getDefaultInstance());
             responseObserver.onCompleted();
         } catch (IllegalArgumentException e) {
-            log.warn("Некорректный запрос в Collector: {}", e.getMessage());
+            log.warn(
+                    "Некорректный запрос в Collector: userId={}, eventId={}, actionType={}, hasTimestamp={}, error={}",
+                    request.getUserId(),
+                    request.getEventId(),
+                    request.getActionType(),
+                    request.hasTimestamp(),
+                    e.getMessage()
+            );
             responseObserver.onError(
                     Status.INVALID_ARGUMENT
                             .withDescription(e.getMessage())
@@ -37,7 +44,14 @@ public class UserActionControllerGrpcService extends UserActionControllerGrpc.Us
                             .asRuntimeException()
             );
         } catch (Exception e) {
-            log.error("Ошибка обработки действия пользователя в Collector", e);
+            log.error(
+                    "Ошибка обработки действия пользователя в Collector: userId={}, eventId={}, actionType={}, hasTimestamp={}",
+                    request.getUserId(),
+                    request.getEventId(),
+                    request.getActionType(),
+                    request.hasTimestamp(),
+                    e
+            );
             responseObserver.onError(
                     Status.INTERNAL
                             .withDescription("Не удалось обработать действие пользователя")

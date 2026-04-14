@@ -3,6 +3,7 @@ package ru.practicum.ewm.collector.kafka;
 import org.apache.avro.io.BinaryEncoder;
 import org.apache.avro.io.EncoderFactory;
 import org.apache.avro.specific.SpecificDatumWriter;
+import org.apache.avro.specific.SpecificData;
 import org.apache.kafka.common.serialization.Serializer;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
@@ -24,7 +25,8 @@ public class UserActionAvroSerializer implements Serializer<UserActionAvro> {
         }
 
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            SpecificDatumWriter<UserActionAvro> writer = new SpecificDatumWriter<>(UserActionAvro.class);
+            SpecificDatumWriter<UserActionAvro> writer =
+                    new SpecificDatumWriter<>(UserActionAvro.getClassSchema(), SpecificData.getForClass(UserActionAvro.class));
             BinaryEncoder encoder = EncoderFactory.get().binaryEncoder(outputStream, null);
             writer.write(data, encoder);
             encoder.flush();
