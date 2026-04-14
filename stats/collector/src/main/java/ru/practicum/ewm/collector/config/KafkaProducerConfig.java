@@ -1,7 +1,7 @@
 package ru.practicum.ewm.collector.config;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.common.serialization.LongSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,12 +18,12 @@ import java.util.Map;
 public class KafkaProducerConfig {
 
     @Bean
-    public ProducerFactory<String, UserActionAvro> userActionProducerFactory(
+    public ProducerFactory<Long, UserActionAvro> userActionProducerFactory(
             @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers
     ) {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, UserActionAvroSerializer.class);
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
@@ -36,8 +36,8 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, UserActionAvro> userActionKafkaTemplate(
-            ProducerFactory<String, UserActionAvro> userActionProducerFactory
+    public KafkaTemplate<Long, UserActionAvro> userActionKafkaTemplate(
+            ProducerFactory<Long, UserActionAvro> userActionProducerFactory
     ) {
         return new KafkaTemplate<>(userActionProducerFactory);
     }

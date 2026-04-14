@@ -1,7 +1,7 @@
 package ru.practicum.ewm.analyzer.config;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.serialization.LongDeserializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +20,7 @@ import java.util.Map;
 public class KafkaConfig {
 
     @Bean
-    public ConsumerFactory<String, UserActionAvro> userActionConsumerFactory(
+    public ConsumerFactory<Long, UserActionAvro> userActionConsumerFactory(
             @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers,
             @Value("${spring.kafka.consumer.group-id}") String groupId,
             @Value("${spring.kafka.consumer.auto-offset-reset:earliest}") String autoOffsetReset
@@ -29,24 +29,24 @@ public class KafkaConfig {
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId + "-user-actions");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, UserActionAvroDeserializer.class);
 
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, UserActionAvro> userActionKafkaListenerContainerFactory(
-            ConsumerFactory<String, UserActionAvro> userActionConsumerFactory
+    public ConcurrentKafkaListenerContainerFactory<Long, UserActionAvro> userActionKafkaListenerContainerFactory(
+            ConsumerFactory<Long, UserActionAvro> userActionConsumerFactory
     ) {
-        ConcurrentKafkaListenerContainerFactory<String, UserActionAvro> factory =
+        ConcurrentKafkaListenerContainerFactory<Long, UserActionAvro> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(userActionConsumerFactory);
         return factory;
     }
 
     @Bean
-    public ConsumerFactory<String, EventSimilarityAvro> eventSimilarityConsumerFactory(
+    public ConsumerFactory<Long, EventSimilarityAvro> eventSimilarityConsumerFactory(
             @Value("${spring.kafka.bootstrap-servers}") String bootstrapServers,
             @Value("${spring.kafka.consumer.group-id}") String groupId,
             @Value("${spring.kafka.consumer.auto-offset-reset:earliest}") String autoOffsetReset
@@ -55,17 +55,17 @@ public class KafkaConfig {
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId + "-events-similarity");
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, autoOffsetReset);
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, EventSimilarityAvroDeserializer.class);
 
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, EventSimilarityAvro> eventSimilarityKafkaListenerContainerFactory(
-            ConsumerFactory<String, EventSimilarityAvro> eventSimilarityConsumerFactory
+    public ConcurrentKafkaListenerContainerFactory<Long, EventSimilarityAvro> eventSimilarityKafkaListenerContainerFactory(
+            ConsumerFactory<Long, EventSimilarityAvro> eventSimilarityConsumerFactory
     ) {
-        ConcurrentKafkaListenerContainerFactory<String, EventSimilarityAvro> factory =
+        ConcurrentKafkaListenerContainerFactory<Long, EventSimilarityAvro> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(eventSimilarityConsumerFactory);
         return factory;

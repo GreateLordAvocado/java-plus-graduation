@@ -14,12 +14,12 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class UserActionProducer {
 
-    private final KafkaTemplate<String, UserActionAvro> kafkaTemplate;
+    private final KafkaTemplate<Long, UserActionAvro> kafkaTemplate;
     private final CollectorKafkaProperties collectorKafkaProperties;
 
     public void send(UserActionAvro action) {
         try {
-            String key = String.valueOf(action.getEventId());
+            Long key = action.getUserId();
 
             kafkaTemplate.send(collectorKafkaProperties.getUserActions(), key, action)
                     .get(10, TimeUnit.SECONDS);
@@ -34,7 +34,7 @@ public class UserActionProducer {
             log.error(
                     "Ошибка отправки действия пользователя в Kafka: topic={}, key={}, userId={}, eventId={}, actionType={}",
                     collectorKafkaProperties.getUserActions(),
-                    action.getEventId(),
+                    action.getUserId(),
                     action.getUserId(),
                     action.getEventId(),
                     action.getActionType(),

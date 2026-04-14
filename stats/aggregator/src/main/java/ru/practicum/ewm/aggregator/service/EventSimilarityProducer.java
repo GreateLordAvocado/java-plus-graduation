@@ -14,12 +14,12 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class EventSimilarityProducer {
 
-    private final KafkaTemplate<String, EventSimilarityAvro> kafkaTemplate;
+    private final KafkaTemplate<Long, EventSimilarityAvro> kafkaTemplate;
     private final AggregatorKafkaProperties kafkaProperties;
 
     public void send(EventSimilarityAvro similarity) {
         try {
-            String key = similarity.getEventA() + "-" + similarity.getEventB();
+            Long key = similarity.getEventA();
 
             kafkaTemplate.send(kafkaProperties.getEventsSimilarity(), key, similarity)
                     .get(10, TimeUnit.SECONDS);
