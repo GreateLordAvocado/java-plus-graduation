@@ -2,7 +2,6 @@ package ru.practicum.ewm.event.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -31,7 +30,6 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-@Slf4j
 public class PublicEventServiceImpl implements PublicEventService {
     private final EventRepository eventRepository;
     private final EventStatsService statsService;
@@ -111,12 +109,7 @@ public class PublicEventServiceImpl implements PublicEventService {
                 .orElseThrow(() -> new NotFoundException("Event with id=" + id + " not found or not published"));
 
         statsService.sendHit(request);
-
-        try {
-            collectorGrpcClient.sendViewAction(userId, id);
-        } catch (RuntimeException ex) {
-            log.warn("Не удалось отправить VIEW в collector для userId={}, eventId={}", userId, id, ex);
-        }
+        collectorGrpcClient.sendViewAction(userId, id);
 
         return dtoService.buildFullDto(
                 event,
@@ -166,15 +159,15 @@ public class PublicEventServiceImpl implements PublicEventService {
     }
 
     @Override
+    public LocalDateTime getPublishedEventDate(long eventId) {
+        return eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
+                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " not found or not published"))
+                .getEventDate();
+    }
+
+    @Override
     @Transactional
     public void likeEvent(long eventId, long userId) {
-        Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
-                .orElseThrow(() -> new NotFoundException("Event with id=" + eventId + " not found or not published"));
-
-        if (event.getEventDate() == null || event.getEventDate().isAfter(LocalDateTime.now())) {
-            throw new BadRequestException("The user can like only events that have already taken place");
-        }
-
         boolean hasConfirmedParticipation = requestInternalClient.hasConfirmedParticipation(eventId, userId);
         if (!hasConfirmedParticipation) {
             throw new BadRequestException("The user can like only attended events");

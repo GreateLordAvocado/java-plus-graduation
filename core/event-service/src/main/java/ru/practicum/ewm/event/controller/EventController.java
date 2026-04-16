@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.ewm.common.exception.BadRequestException;
 import ru.practicum.ewm.event.api.dto.EventFullDto;
 import ru.practicum.ewm.event.api.dto.EventSortOption;
 import ru.practicum.ewm.event.dto.EventShortDto;
@@ -39,6 +40,11 @@ public class EventController {
             @PathVariable long eventId,
             @RequestHeader("X-EWM-USER-ID") long userId
     ) {
+        LocalDateTime eventDate = eventService.getPublishedEventDate(eventId);
+        if (eventDate == null || eventDate.isAfter(LocalDateTime.now())) {
+            throw new BadRequestException("The user can like only events that have already taken place");
+        }
+
         eventService.likeEvent(eventId, userId);
     }
 

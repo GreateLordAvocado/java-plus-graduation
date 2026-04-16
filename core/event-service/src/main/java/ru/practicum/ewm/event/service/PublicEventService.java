@@ -26,5 +26,7 @@ public interface PublicEventService {
 
     List<EventShortDto> getRecommendations(long userId, int size);
 
+    LocalDateTime getPublishedEventDate(long eventId);
+
     void likeEvent(long eventId, long userId);
 }

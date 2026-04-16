@@ -18,15 +18,29 @@ public class CollectorGrpcClient {
     private UserActionControllerGrpc.UserActionControllerBlockingStub collectorStub;
 
     public void sendViewAction(long userId, long eventId) {
-        sendAction(userId, eventId, ActionTypeProto.ACTION_VIEW);
+        sendActionSafely(userId, eventId, ActionTypeProto.ACTION_VIEW);
     }
 
     public void sendRegisterAction(long userId, long eventId) {
-        sendAction(userId, eventId, ActionTypeProto.ACTION_REGISTER);
+        sendActionSafely(userId, eventId, ActionTypeProto.ACTION_REGISTER);
     }
 
     public void sendLikeAction(long userId, long eventId) {
-        sendAction(userId, eventId, ActionTypeProto.ACTION_LIKE);
+        sendActionSafely(userId, eventId, ActionTypeProto.ACTION_LIKE);
+    }
+
+    private void sendActionSafely(long userId, long eventId, ActionTypeProto actionType) {
+        try {
+            sendAction(userId, eventId, actionType);
+        } catch (RuntimeException ex) {
+            log.warn(
+                    "Не удалось отправить действие {} в collector: userId={}, eventId={}",
+                    actionType,
+                    userId,
+                    eventId,
+                    ex
+            );
+        }
     }
 
     private void sendAction(long userId, long eventId, ActionTypeProto actionType) {
