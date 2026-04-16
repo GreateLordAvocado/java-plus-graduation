@@ -19,11 +19,6 @@ public class UserActionListener {
             containerFactory = "userActionKafkaListenerContainerFactory"
     )
     public void onUserAction(UserActionAvro action) {
-        if (action == null) {
-            log.warn("Получено пустое сообщение из топика пользовательских действий");
-            return;
-        }
-
         log.info(
                 "Получено действие пользователя из Kafka: userId={}, eventId={}, actionType={}",
                 action.getUserId(),

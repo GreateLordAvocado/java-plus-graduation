@@ -3,6 +3,7 @@ package ru.practicum.ewm.aggregator.kafka;
 import org.apache.avro.io.BinaryDecoder;
 import org.apache.avro.io.DecoderFactory;
 import org.apache.avro.specific.SpecificDatumReader;
+import org.apache.kafka.common.errors.SerializationException;
 import org.apache.kafka.common.serialization.Deserializer;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
 
@@ -17,8 +18,16 @@ public class UserActionAvroDeserializer implements Deserializer<UserActionAvro> 
 
     @Override
     public UserActionAvro deserialize(String topic, byte[] data) {
-        if (data == null || data.length == 0) {
-            return null;
+        if (data == null) {
+            throw new SerializationException(
+                    "Получен null payload для UserActionAvro из топика " + topic
+            );
+        }
+
+        if (data.length == 0) {
+            throw new SerializationException(
+                    "Получен пустой payload для UserActionAvro из топика " + topic
+            );
         }
 
         try {
@@ -30,8 +39,9 @@ public class UserActionAvroDeserializer implements Deserializer<UserActionAvro> 
             try {
                 return UserActionAvro.fromByteBuffer(ByteBuffer.wrap(data));
             } catch (Exception singleObjectException) {
-                IllegalStateException ex =
-                        new IllegalStateException("Не удалось десериализовать UserActionAvro");
+                SerializationException ex = new SerializationException(
+                        "Не удалось десериализовать UserActionAvro из топика " + topic
+                );
                 ex.addSuppressed(binaryException);
                 ex.addSuppressed(singleObjectException);
                 throw ex;
