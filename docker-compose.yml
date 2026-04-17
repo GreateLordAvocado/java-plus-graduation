@@ -31,6 +31,45 @@ services:
       timeout: 5s
       retries: 10
 
+  kafka:
+    image: apache/kafka:3.7.1
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - "9094:9094"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,EXTERNAL://:9094,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  kafka-init:
+    image: apache/kafka:3.7.1
+    container_name: kafka-init
+    depends_on:
+      kafka:
+        condition: service_healthy
+    entrypoint: [ "/bin/sh", "-c" ]
+    command: >
+      "
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic stats.user-actions.v1 --replication-factor 1 --partitions 3 &&
+      /opt/kafka/bin/kafka-topics.sh --bootstrap-server kafka:9092 --create --if-not-exists --topic stats.events-similarity.v1 --replication-factor 1 --partitions 3
+      "
+    restart: "no"
+
   discovery-server:
     build: ./infra/discovery-server
     image: discovery-server
@@ -73,6 +112,9 @@ services:
     environment:
       SERVER_PORT: 8080
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   user-service:
@@ -85,13 +127,16 @@ services:
       discovery-server:
         condition: service_started
       config-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       SERVER_PORT: 8081
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   catalog-service:
@@ -104,13 +149,16 @@ services:
       discovery-server:
         condition: service_started
       config-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       SERVER_PORT: 8082
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   request-service:
@@ -123,13 +171,16 @@ services:
       discovery-server:
         condition: service_started
       config-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       SERVER_PORT: 8083
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   stats-server:
@@ -144,13 +195,16 @@ services:
       discovery-server:
         condition: service_started
       config-server:
-        condition: service_started
+        condition: service_healthy
     environment:
       SERVER_PORT: 9090
       EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
 
   event-service:
@@ -163,7 +217,7 @@ services:
       discovery-server:
         condition: service_started
       config-server:
-        condition: service_started
+        condition: service_healthy
       stats-server:
         condition: service_started
     environment:
@@ -173,4 +227,69 @@ services:
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 824322
       STATS_SERVER_SERVICE_ID: stats-server
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
+    restart: on-failure
+
+  collector:
+    build: ./stats/collector
+    image: collector
+    container_name: collector
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    environment:
+      EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
+    restart: on-failure
+
+  aggregator:
+    build: ./stats/aggregator
+    image: aggregator
+    container_name: aggregator
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    environment:
+      EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
+    restart: on-failure
+
+  analyzer:
+    build: ./stats/analyzer
+    image: analyzer
+    container_name: analyzer
+    depends_on:
+      ewm-db:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+      discovery-server:
+        condition: service_started
+      config-server:
+        condition: service_healthy
+    environment:
+      EUREKA_DEFAULT_ZONE: http://discovery-server:8761/eureka
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 824322
+      SPRING_CONFIG_IMPORT: optional:configserver:http://config-server:8888
+      SPRING_CLOUD_CONFIG_URI: http://config-server:8888
+      SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED: "false"
     restart: on-failure
